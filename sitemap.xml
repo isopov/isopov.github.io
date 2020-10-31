@@ -63,7 +63,15 @@
   </url>
   
   <url>
+    <loc>https://isopov.github.io/authors/</loc>
+  </url>
+  
+  <url>
     <loc>https://isopov.github.io/categories/</loc>
+  </url>
+  
+  <url>
+    <loc>https://isopov.github.io/series/</loc>
   </url>
   
 </urlset>
