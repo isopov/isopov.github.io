@@ -5,25 +5,24 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-<title>Ivan Sopov blog</title>
+<title>CTE Oracle vs Postgres - Ivan Sopov blog</title>
 
-<meta name="keywords" content="" />
-<meta name="description" content="">
+<meta name="keywords" content="SQL, Oracle, Postgres" />
+<meta name="description" content="Major part of my career to the moment passed working with databases and mostly with Oracle and Postgres. Several years ago I was really surprised by the difference in handling CTE (common table expressions) in these databases. From that time I spread this knowledge and recreated a sample for it several times. The last one was this week and I decided to store it somewhere - this mostly dead blog seems like a good place ;-) So here is a really simple case of using CTE on Oracle.">
 <meta name="author" content="">
-<link rel="canonical" href="https://isopov.github.io/" />
+<link rel="canonical" href="https://isopov.github.io/posts/cte-oracle-vs-postgres/" />
 <link href="https://isopov.github.io/assets/css/stylesheet.min.5d44456813d58b9cb020e3474e4c5d14b03070ef2a1e81ef3a4de94a1bc6696b.css" integrity="sha256-XURFaBPVi5ywIONHTkxdFLAwcO8qHoHvOk3pShvGaWs=" rel="preload stylesheet"
     as="style">
 <link rel="apple-touch-icon" href="https://isopov.github.io/apple-touch-icon.png">
 <link rel="icon" href="https://isopov.github.io/favicon.ico">
 <meta name="generator" content="Hugo 0.77.0" />
-<link rel="alternate" type="application/rss&#43;xml" href="https://isopov.github.io/index.xml">
 
 
 
 
 </head>
 
-<body class="list home" id="top">
+<body class="single" id="top">
 <script>
     
     if (localStorage.getItem("pref-theme") === "dark") {
@@ -80,39 +79,75 @@
     </nav>
 </header>
 
-    <main class="main"> 
+    <main class="main">
 
-
-
-<article class="first-entry"> 
-
-  <header class="entry-header">
-    <h2>
+<article class="post-single">
+  <header class="post-header">
+    <h1 class="post-title">
       CTE Oracle vs Postgres
-    </h2>
-  </header>
-  <section class="entry-content">
-    <p>Major part of my career to the moment passed working with databases and mostly with Oracle and Postgres. Several years ago I was really surprised by the difference in handling CTE (common table expressions) in these databases. From that time I spread this knowledge and recreated a sample for it several times. The last one was this week and I decided to store it somewhere - this mostly dead blog seems like a good place ;-) So here is a really simple case of using CTE on Oracle....</p>
-  </section>
-  <footer class="entry-footer">September 15, 2018
-</footer>
-  <a class="entry-link" aria-label="post link to CTE Oracle vs Postgres" href="https://isopov.github.io/posts/cte-oracle-vs-postgres/"></a>
-</article>
-<article class="post-entry"> 
+    </h1>
+    <div class="post-meta">September 15, 2018
 
-  <header class="entry-header">
-    <h2>
-      Learning Vaadin7 Review
-    </h2>
-  </header>
-  <section class="entry-content">
-    <p>Some time ago I was proposed to review the second edition of the “Learning Vaadin 7” (On Amazon) book. Shame on me for holding it for so long. Previously I have used Vaadin 6 and was really impressed by its features and simplicity of doing real desktop-like web-applications. But at the same time every now and then I was frustrated by some of the methods and mostly by the methods returning plain Objects....</p>
-  </section>
-  <footer class="entry-footer">December 28, 2013
-</footer>
-  <a class="entry-link" aria-label="post link to Learning Vaadin7 Review" href="https://isopov.github.io/posts/learning-vaadin7-review/"></a>
-</article>
+    </div>
+  </header> 
 
+  <div class="post-content"><p>Major part of my career to the moment passed working with databases and mostly with Oracle and Postgres. Several years ago I was really surprised by the difference in handling CTE (common table expressions) in these databases. From that time I spread this knowledge and recreated a sample for it several times. The last one was this week and I decided to store it somewhere - this mostly dead blog seems like a good place ;-)
+So here is a really simple case of using CTE on Oracle.</p>
+<pre><code>create table test_table(
+  id int primary key,
+  foo varchar2(10)
+);
+
+insert into test_table(id, foo)
+select rownum, 'val'||rownum from dual
+   connect by rownum&lt;=100000;
+   
+explain plan for select * from (select * from test_table) sel where id=42;
+select * from table(dbms_xplan.display);
+--|   0 | SELECT STATEMENT            |               |     1 |    20 |     1   (0)| 00:00:01 |
+--|   1 |  TABLE ACCESS BY INDEX ROWID| TEST_TABLE    |     1 |    20 |     1   (0)| 00:00:01 |
+--|*  2 |   INDEX UNIQUE SCAN         | SYS_C00328137 |     1 |       |     1   (0)| 00:00:01 |
+
+explain plan for with sel as (select * from test_table) select * from sel where id=42;
+select * from table(dbms_xplan.display);
+--|   0 | SELECT STATEMENT            |               |     1 |    20 |     1   (0)| 00:00:01 |
+--|   1 |  TABLE ACCESS BY INDEX ROWID| TEST_TABLE    |     1 |    20 |     1   (0)| 00:00:01 |
+--|*  2 |   INDEX UNIQUE SCAN         | SYS_C00328137 |     1 |       |     1   (0)| 00:00:01 |
+</code></pre><p>You can see that from the resulting execution plan there is no difference between CTE and sub-select.
+But here is similar sample on Postgres:</p>
+<pre><code>create table test_table(
+  id serial primary key,
+  foo text
+);
+
+insert into test_table(foo)
+select 'val'||generate_series from generate_series(1, 100000);
+
+explain analyze select * from (select * from test_table) as sel where id=42;
+-- Index Scan using test_table_pkey on test_table  (cost=0.29..8.31 rows=1 width=12) (actual time=0.037..0.038 rows=1 loops=1)
+-- Index Cond: (id = 42)
+-- Planning time: 0.053 ms
+-- Execution time: 0.048 ms
+
+
+explain analyze with sel as (select * from test_table) select * from sel where id=42;
+-- CTE Scan on sel  (cost=1541.00..3791.00 rows=500 width=36) (actual time=0.025..32.644 rows=1 loops=1)
+-- Filter: (id = 42)
+-- Rows Removed by Filter: 99999
+-- CTE sel
+-- -&gt;  Seq Scan on test_table  (cost=0.00..1541.00 rows=100000 width=12) (actual time=0.016..5.859 rows=100000 loops=1)
+-- Planning time: 0.069 ms
+-- Execution time: 35.305 ms
+</code></pre><p>Difference is dramatic. <a href="https://www.postgresql.org/message-id/24672.1319561025%40sss.pgh.pa.us">Quoting Tom Lane</a> (real Postgres expert) &ldquo;CTEs act as optimization fences. This is a feature, not a bug. Use them when you want to isolate the evaluation of a subquery.&rdquo; But a case when CTE should be used in Postgres is a theme for another post (maybe, so you here in another 4 or 5 years :-))</p>
+</div>
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://isopov.github.io/tags/sql">SQL</a></li>
+      <li><a href="https://isopov.github.io/tags/oracle">Oracle</a></li>
+      <li><a href="https://isopov.github.io/tags/postgres">Postgres</a></li>
+    </ul>
+  </footer>
+</article>
     </main><footer class="footer">
     <span>&copy; 2020 <a href="https://isopov.github.io/">Ivan Sopov blog</a></span>
     <span>&middot;</span>
@@ -128,7 +163,8 @@
 </a>
 
 
-
+<script src="https://isopov.github.io/assets/js/highlight.min.e7afc2928c0925d65c4732dfebe147014d91299a98e819e4b42f25c4fa68e91c.js" integrity="sha256-56/CkowJJdZcRzLf6&#43;FHAU2RKZqY6BnktC8lxPpo6Rw="></script>
+<script>hljs.initHighlightingOnLoad();</script>
 <script>
     window.onload = function () {
         if (localStorage.getItem("menu-scroll-position")) {

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Oracle on Ivan Sopov blog</title>
+    <link>https://isopov.github.io/tags/oracle/</link>
+    <description>Recent content in Oracle on Ivan Sopov blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 15 Sep 2018 15:37:17 +0300</lastBuildDate><atom:link href="https://isopov.github.io/tags/oracle/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>CTE Oracle vs Postgres</title>
+      <link>https://isopov.github.io/posts/cte-oracle-vs-postgres/</link>
+      <pubDate>Sat, 15 Sep 2018 15:37:17 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/cte-oracle-vs-postgres/</guid>
+      <description>Major part of my career to the moment passed working with databases and mostly with Oracle and Postgres. Several years ago I was really surprised by the difference in handling CTE (common table expressions) in these databases. From that time I spread this knowledge and recreated a sample for it several times. The last one was this week and I decided to store it somewhere - this mostly dead blog seems like a good place ;-) So here is a really simple case of using CTE on Oracle.</description>
+    </item>
+    
+  </channel>
+</rss>
