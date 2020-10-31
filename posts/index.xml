@@ -17,6 +17,17 @@
     </item>
     
     <item>
+      <title>Benchmarking an interview question</title>
+      <link>https://isopov.github.io/posts/benchmarking-add-exact/</link>
+      <pubDate>Sat, 15 Aug 2015 23:22:39 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/benchmarking-add-exact/</guid>
+      <description>Author benchmarks a super-simple method with a dumb implementation from his recent job interview. Results of this benchmark contradict with assumptions. The process of benchmarking produces some public benefit.
+So, on a recent job interview it was suggested to write implementation for a really simple method
+public int sum(int x, int y); The main question for implementation is surely dealing with integer overflow (we were speaking about Java programming language). As it was left for me to decide what to do in case of overflow I suggested a standard way - throwing exception.</description>
+    </item>
+    
+    <item>
       <title>Learning Vaadin7 Review</title>
       <link>https://isopov.github.io/posts/learning-vaadin7-review/</link>
       <pubDate>Sat, 28 Dec 2013 17:42:46 +0300</pubDate>
