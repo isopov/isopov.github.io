@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
+
+    <meta name="author" content="Ivan Sopov">
+    <meta name="description" content="Update: the follow up post gives another version, that lacks the drawback of unequal load on processor cores.
+There is a very good blog post about how to write the factorial method in Java (really it is not about righting factorial). However, even in this master peace;-) there is no multi-threaded factorial. So here it is. There are some problems with it. The most significant is that multiplying all the BigIntegers from 1 to 50000 is much less heavy job for the computer, than multiplying all BigIntegers from 50001 to 100000.">
+    <meta name="keywords" content="blog,developer,personal">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Multithreaded factorial"/>
+<meta name="twitter:description" content="Update: the follow up post gives another version, that lacks the drawback of unequal load on processor cores.
+There is a very good blog post about how to write the factorial method in Java (really it is not about righting factorial). However, even in this master peace;-) there is no multi-threaded factorial. So here it is. There are some problems with it. The most significant is that multiplying all the BigIntegers from 1 to 50000 is much less heavy job for the computer, than multiplying all BigIntegers from 50001 to 100000."/>
+
+    <meta property="og:title" content="Multithreaded factorial" />
+<meta property="og:description" content="Update: the follow up post gives another version, that lacks the drawback of unequal load on processor cores.
+There is a very good blog post about how to write the factorial method in Java (really it is not about righting factorial). However, even in this master peace;-) there is no multi-threaded factorial. So here it is. There are some problems with it. The most significant is that multiplying all the BigIntegers from 1 to 50000 is much less heavy job for the computer, than multiplying all BigIntegers from 50001 to 100000." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://isopov.github.io/posts/multithreaded-factorial/" />
+<meta property="article:published_time" content="2011-07-03T09:55:51+03:00" />
+<meta property="article:modified_time" content="2011-07-03T09:55:51+03:00" />
+
+
+    <title>
+  Multithreaded factorial · isopov
+</title>
+
+    
+      <link rel="canonical" href="https://isopov.github.io/posts/multithreaded-factorial/">
+    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.1.7/css/fork-awesome.min.css" integrity="sha256-gsmEoJAws/Kd3CjuOQzLie5Q3yshhvmo7YNtBG7aaEY=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+
+    
+      
+      
+      <link rel="stylesheet" href="/css/coder.min.f01c647a0d25b40da992a37c3376291185eed8a50ced8c26cc2c0bcfe38c97df.css" integrity="sha256-8Bxkeg0ltA2pkqN8M3YpEYXu2KUM7YwmzCwLz&#43;OMl98=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+      
+        
+        
+        <link rel="stylesheet" href="/css/coder-dark.min.126ad3988d46bdae6217a11105b53c9662bca05f39d42d3c0fb366919d334620.css" integrity="sha256-EmrTmI1Gva5iF6ERBbU8lmK8oF851C08D7NmkZ0zRiA=" crossorigin="anonymous" media="screen" />
+      
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/images/favicon-16x16.png" sizes="16x16">
+
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+
+    
+      <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+    
+
+    <meta name="generator" content="Hugo 0.77.0" />
+  </head>
+
+  
+  
+    
+  
+  <body class="colorscheme-auto"
+        onload=" twemoji.parse(document.body); "
+  >
+    
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="/">
+      isopov
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/about/">About</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/posts/">Blog</a>
+            </li>
+          
+        
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Multithreaded factorial</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime='2011-07-03T09:55:51&#43;03:00'>
+                July 3, 2011
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              3-minute read
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <a href="/tags/java/">Java</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <p><strong>Update</strong>: <a href="https://isopov.github.io/posts/multithreaded-factorial-with-threadpoolexecutor/">the follow up post</a> gives another version, that lacks the drawback of unequal load on processor cores.</p>
+<p>There is a very good blog post about <a href="https://chaosinmotion.com/blog/?p=622">how to write the factorial</a> method in Java (really it is not about righting factorial). However, even in this master peace;-) there is no multi-threaded factorial. So here it is.
+There are some problems with it. The most significant is that multiplying all the BigIntegers from 1 to 50000 is much less heavy job for the computer, than multiplying all BigIntegers from 50001 to 100000. So the the amount of work that is done by each worker-thread is not equal. But investigation on how this may be resolved in a common way is much harder problem, than just writing what I am publishing here. Maybe I&rsquo;ll do it in the other post.</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#fff;font-weight:bold">package</span> sample;
+
+<span style="color:#fff;font-weight:bold">import</span> java.math.BigDecimal;
+<span style="color:#fff;font-weight:bold">import</span> java.util.concurrent.TimeUnit;
+
+<span style="color:#fff;font-weight:bold">import</span> junit.framework.Assert;
+
+<span style="color:#fff;font-weight:bold">import</span> org.junit.Test;
+
+public class FactorialTest {
+
+    private static final <span style="color:#fff;font-weight:bold">int</span> INPUT = <span style="color:#ff0;font-weight:bold">203457</span>;
+
+    <span style="color:#f00">@</span>Test
+    public void test() throws InterruptedException {
+        BigDecimal fact1, fact2;
+        {
+            long start = System.nanoTime();
+            fact1 = fact(INPUT);
+            long end = System.nanoTime();
+            System.out.<span style="color:#fff;font-weight:bold">println</span>(TimeUnit.SECONDS.convert(end - start,
+                    TimeUnit.NANOSECONDS) + <span style="color:#0ff;font-weight:bold">&#34; seconds for 1 thread&#34;</span>);
+        }
+        {
+            long start = System.nanoTime();
+            fact2 = factMt(INPUT, <span style="color:#ff0;font-weight:bold">4</span>);
+            long end = System.nanoTime();
+            System.out.<span style="color:#fff;font-weight:bold">println</span>(TimeUnit.SECONDS.convert(end - start,
+                    TimeUnit.NANOSECONDS) + <span style="color:#0ff;font-weight:bold">&#34; seconds for 4 threads&#34;</span>);
+        }
+        Assert.assertEquals(fact1, fact2);
+
+    }
+
+    private static BigDecimal fact(<span style="color:#fff;font-weight:bold">int</span> input) {
+        BigDecimal result = BigDecimal.valueOf(<span style="color:#ff0;font-weight:bold">1</span>);
+        <span style="color:#fff;font-weight:bold">for</span> (<span style="color:#fff;font-weight:bold">int</span> i = <span style="color:#ff0;font-weight:bold">1</span>; i &lt;= input; i++) {
+            result = result.multiply(BigDecimal.valueOf(i));
+        }
+        <span style="color:#fff;font-weight:bold">return</span> result;
+    }
+
+    private static BigDecimal factMt(<span style="color:#fff;font-weight:bold">int</span> input, <span style="color:#fff;font-weight:bold">int</span> numThreads)
+            throws InterruptedException {
+        BigDecimal result = BigDecimal.valueOf(<span style="color:#ff0;font-weight:bold">1</span>);
+        Thread[] threads = new Thread[numThreads];
+        FactComputer[] workers = new FactComputer[numThreads];
+        <span style="color:#fff;font-weight:bold">for</span> (<span style="color:#fff;font-weight:bold">int</span> i = <span style="color:#ff0;font-weight:bold">1</span>; i &lt;= numThreads; i++) {
+            <span style="color:#fff;font-weight:bold">int</span> start = i == <span style="color:#ff0;font-weight:bold">1</span> <span style="color:#f00">?</span> <span style="color:#ff0;font-weight:bold">1</span> : (input / numThreads * (i - <span style="color:#ff0;font-weight:bold">1</span>)) + <span style="color:#ff0;font-weight:bold">1</span>;
+            <span style="color:#fff;font-weight:bold">int</span> end = i == numThreads <span style="color:#f00">?</span> input : input / numThreads * i;
+            workers[i - <span style="color:#ff0;font-weight:bold">1</span>] = new FactComputer(start, end);
+            threads[i - <span style="color:#ff0;font-weight:bold">1</span>] = new Thread(workers[i - <span style="color:#ff0;font-weight:bold">1</span>]);
+        }
+
+        <span style="color:#fff;font-weight:bold">for</span> (<span style="color:#fff;font-weight:bold">int</span> i = <span style="color:#ff0;font-weight:bold">0</span>; i &lt; numThreads; i++) {
+            threads[i].start();
+        }
+
+        <span style="color:#fff;font-weight:bold">for</span> (<span style="color:#fff;font-weight:bold">int</span> i = <span style="color:#ff0;font-weight:bold">0</span>; i &lt; numThreads; i++) {
+            threads[i].join();
+        }
+        <span style="color:#fff;font-weight:bold">for</span> (<span style="color:#fff;font-weight:bold">int</span> i = <span style="color:#ff0;font-weight:bold">0</span>; i &lt; numThreads; i++) {
+            result = result.multiply(workers[i].result);
+        }
+        <span style="color:#fff;font-weight:bold">return</span> result;
+    }
+
+    private static class FactComputer implements Runnable {
+        BigDecimal result;
+        private final <span style="color:#fff;font-weight:bold">int</span> from;
+        private final <span style="color:#fff;font-weight:bold">int</span> to;
+
+        public FactComputer(<span style="color:#fff;font-weight:bold">int</span> from, <span style="color:#fff;font-weight:bold">int</span> to) {
+            this.from = from;
+            this.to = to;
+        }
+
+        public void run() {
+            result = BigDecimal.valueOf(from);
+            <span style="color:#fff;font-weight:bold">for</span> (<span style="color:#fff;font-weight:bold">int</span> i = from + <span style="color:#ff0;font-weight:bold">1</span>; i &lt;= to; i++) {
+                result = result.multiply(BigDecimal.valueOf(i));
+            }
+
+        }
+    }
+}
+</code></pre></div><p>Here is the result in <code>System.out</code>:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">56 seconds for 1 thread
+26 seconds for 4 threads
+</code></pre></div><p>I have written it as the unit test to be sure that at least this simplistic distribution of work between threads has no bugs (I tested it with different values of INPUT). I think it is obvious from this code that I run it on the 4-core processor. Actually on the 2-core but with hyper-threading enabled.</p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      
+  <footer class="footer">
+    <section class="container">
+      
+      
+        ©
+        
+        2020
+         Ivan Sopov 
+      
+      
+         · 
+        Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+      
+      
+    </section>
+  </footer>
+
+
+    </main>
+
+    
+      
+        
+        <script src="/js/dark-mode.min.0213e1773e6d1c5a644f847c67a6f8abac49a3776e2976f6008038af8c5b76a1.js"></script>
+      
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+  </body>
+
+</html>

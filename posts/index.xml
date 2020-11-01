@@ -36,5 +36,92 @@ public int sum(int x, int y); The main question for implementation is surely dea
       <description>Some time ago I was proposed to review the second edition of the &amp;ldquo;Learning Vaadin 7&amp;rdquo; (On Amazon) book. Shame on me for holding it for so long. Previously I have used Vaadin 6 and was really impressed by its features and simplicity of doing real desktop-like web-applications. But at the same time every now and then I was frustrated by some of the methods and mostly by the methods returning plain Objects.</description>
     </item>
     
+    <item>
+      <title>Github vs Bitbucket</title>
+      <link>https://isopov.github.io/posts/github-vs-bitbucket/</link>
+      <pubDate>Thu, 09 May 2013 09:30:30 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/github-vs-bitbucket/</guid>
+      <description>Github totally owns the open-source movement today. And this situation impacts enterprise development. But as far as I can tell Bitbucket is much better for proprietary development in private repositories. Here are the arguments:
+ Option to prevent non-fast-forward pushes. It even allows to prevent non-fast-forward and still allowing removal of feature-branches! As far as I know, this may require a bit of configuration in standalone git repositories. No such option on Github.</description>
+    </item>
+    
+    <item>
+      <title>Use newer Java FTW!</title>
+      <link>https://isopov.github.io/posts/use-newer-java-ftw/</link>
+      <pubDate>Fri, 05 Apr 2013 09:44:46 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/use-newer-java-ftw/</guid>
+      <description>One of my recent tasks was trying to convince client, that we should target the 7th version of the JVM, and not the 5th. I failed. Actually I don&amp;rsquo;t think that such task is possible unless there are no any real reasons in using older Java. Nevertheless here is the text, that I wrote.
+What Java implementation are we going to use? The most used one is Oracle. Oracle Java5 reached its official end of life in Oct 2009 Oracle Java6 reached its official end of life in Feb 2013 (there will be no public updates anymore, nor any security updates)</description>
+    </item>
+    
+    <item>
+      <title>Order of Enums in Hashmap</title>
+      <link>https://isopov.github.io/posts/order-of-enums-in-hashmap/</link>
+      <pubDate>Fri, 10 Feb 2012 09:50:33 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/order-of-enums-in-hashmap/</guid>
+      <description>Recently I have found myself writing a complex sql-builder for two weeks already. Of cause I used TDD technique and this was much less like a pain comparing to the times when I didn&amp;rsquo;t wrote any tests. In some moment I decided that just operating with strings in some thousand or more lines of code is not very cool and started to write some OOD for the problem. In the resulting type hierarchy there were some enums.</description>
+    </item>
+    
+    <item>
+      <title>ForkJoin factorial</title>
+      <link>https://isopov.github.io/posts/forkjoin-factorial/</link>
+      <pubDate>Sun, 09 Oct 2011 10:05:54 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/forkjoin-factorial/</guid>
+      <description>Several months ago I wrote a multithreaded factorial method. It was very simple from the point of view of the underlying technology, but not so trivial from the point of view of synchronizing threads. It used simple start() and join() methods that are available since the Java 1.0 And than I thought that with all the power of java I can improve it. So i used the ThreadPoolExecutor - a piece of technology from the Java 5 and really improved - here is my post about multithreaded factorial using TreadPoolExecutor.</description>
+    </item>
+    
+    <item>
+      <title>Multithreaded factorial with ThreadPoolExecutor</title>
+      <link>https://isopov.github.io/posts/multithreaded-factorial-with-threadpoolexecutor/</link>
+      <pubDate>Fri, 22 Jul 2011 10:00:17 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/multithreaded-factorial-with-threadpoolexecutor/</guid>
+      <description>Update: the follow up post gives another version using newly introduced API.
+In the previous post I have written a multithreaded factorial. It was not really good, because last one of the worker threads worked significantly longer than the first one. Fortunately we are living in 2011 and Java 1.5 was released so long time ago. The solution is simple - do not create 4 threads of the 4 virtual cores processors.</description>
+    </item>
+    
+    <item>
+      <title>Multithreaded factorial</title>
+      <link>https://isopov.github.io/posts/multithreaded-factorial/</link>
+      <pubDate>Sun, 03 Jul 2011 09:55:51 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/multithreaded-factorial/</guid>
+      <description>Update: the follow up post gives another version, that lacks the drawback of unequal load on processor cores.
+There is a very good blog post about how to write the factorial method in Java (really it is not about righting factorial). However, even in this master peace;-) there is no multi-threaded factorial. So here it is. There are some problems with it. The most significant is that multiplying all the BigIntegers from 1 to 50000 is much less heavy job for the computer, than multiplying all BigIntegers from 50001 to 100000.</description>
+    </item>
+    
+    <item>
+      <title>Not symmetric equals after override</title>
+      <link>https://isopov.github.io/posts/not-symmetric-equals-after-override/</link>
+      <pubDate>Sat, 30 Apr 2011 10:23:54 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/not-symmetric-equals-after-override/</guid>
+      <description>There is really cool tool FindBugs and recently I found that it can discover (and discovered such a situation in my experience) broken symmetry for equals method when overriding it. So this is just a little example of this bug. (HashCode method is generated and I assume it to be all right).
+public class BrokenEqualsTest { public static void main(String[] args) { Test1 test1 = new Test1(); test1.field = &amp;#34;test&amp;#34;; Test2 test2 = new Test2(); ((Test1) test2).</description>
+    </item>
+    
+    <item>
+      <title>How to change sid of Oracle Express (XE)</title>
+      <link>https://isopov.github.io/posts/change-oracle-express-sid/</link>
+      <pubDate>Sat, 30 Apr 2011 10:12:28 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/change-oracle-express-sid/</guid>
+      <description>No way.</description>
+    </item>
+    
+    <item>
+      <title>Collisions of hashcodes - much more real than an md5 collision</title>
+      <link>https://isopov.github.io/posts/identity-hashcode-collisions/</link>
+      <pubDate>Sat, 26 Mar 2011 10:19:24 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/identity-hashcode-collisions/</guid>
+      <description>So okay, hashcode is int and so there are only 4294967296 distinct hashcodes. It is not a little number, but in modern systems there could be definitely much more objects.
+In a very good book by Joshua Bloch I have read that there is a probability that two consequently created objects will have an equal system identity hashcode. Actually from the time of publishing that book major version of Java was released and the situation has improved dramatically.</description>
+    </item>
+    
   </channel>
 </rss>

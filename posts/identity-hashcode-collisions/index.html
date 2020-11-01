@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Language" content="en">
+
+    <meta name="author" content="Ivan Sopov">
+    <meta name="description" content="So okay, hashcode is int and so there are only 4294967296 distinct hashcodes. It is not a little number, but in modern systems there could be definitely much more objects.
+In a very good book by Joshua Bloch I have read that there is a probability that two consequently created objects will have an equal system identity hashcode. Actually from the time of publishing that book major version of Java was released and the situation has improved dramatically.">
+    <meta name="keywords" content="blog,developer,personal">
+
+    <meta name="twitter:card" content="summary"/>
+<meta name="twitter:title" content="Collisions of hashcodes - much more real than an md5 collision"/>
+<meta name="twitter:description" content="So okay, hashcode is int and so there are only 4294967296 distinct hashcodes. It is not a little number, but in modern systems there could be definitely much more objects.
+In a very good book by Joshua Bloch I have read that there is a probability that two consequently created objects will have an equal system identity hashcode. Actually from the time of publishing that book major version of Java was released and the situation has improved dramatically."/>
+
+    <meta property="og:title" content="Collisions of hashcodes - much more real than an md5 collision" />
+<meta property="og:description" content="So okay, hashcode is int and so there are only 4294967296 distinct hashcodes. It is not a little number, but in modern systems there could be definitely much more objects.
+In a very good book by Joshua Bloch I have read that there is a probability that two consequently created objects will have an equal system identity hashcode. Actually from the time of publishing that book major version of Java was released and the situation has improved dramatically." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://isopov.github.io/posts/identity-hashcode-collisions/" />
+<meta property="article:published_time" content="2011-03-26T10:19:24+03:00" />
+<meta property="article:modified_time" content="2011-03-26T10:19:24+03:00" />
+
+
+    <title>
+  Collisions of hashcodes - much more real than an md5 collision · isopov
+</title>
+
+    
+      <link rel="canonical" href="https://isopov.github.io/posts/identity-hashcode-collisions/">
+    
+
+    <link href="https://fonts.googleapis.com/css?family=Lato:400,700%7CMerriweather:300,700%7CSource+Code+Pro:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fork-awesome@1.1.7/css/fork-awesome.min.css" integrity="sha256-gsmEoJAws/Kd3CjuOQzLie5Q3yshhvmo7YNtBG7aaEY=" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" integrity="sha256-l85OmPOjvil/SOvVt3HnSSjzF1TUMyT9eV0c2BzEGzU=" crossorigin="anonymous" />
+
+    
+      
+      
+      <link rel="stylesheet" href="/css/coder.min.f01c647a0d25b40da992a37c3376291185eed8a50ced8c26cc2c0bcfe38c97df.css" integrity="sha256-8Bxkeg0ltA2pkqN8M3YpEYXu2KUM7YwmzCwLz&#43;OMl98=" crossorigin="anonymous" media="screen" />
+    
+
+    
+
+    
+      
+        
+        
+        <link rel="stylesheet" href="/css/coder-dark.min.126ad3988d46bdae6217a11105b53c9662bca05f39d42d3c0fb366919d334620.css" integrity="sha256-EmrTmI1Gva5iF6ERBbU8lmK8oF851C08D7NmkZ0zRiA=" crossorigin="anonymous" media="screen" />
+      
+    
+
+    
+
+    
+
+    <link rel="icon" type="image/png" href="/images/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/images/favicon-16x16.png" sizes="16x16">
+
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+
+    
+      <script src="https://twemoji.maxcdn.com/v/latest/twemoji.min.js" crossorigin="anonymous"></script>
+    
+
+    <meta name="generator" content="Hugo 0.77.0" />
+  </head>
+
+  
+  
+    
+  
+  <body class="colorscheme-auto"
+        onload=" twemoji.parse(document.body); "
+  >
+    
+<div class="float-container">
+    <a id="dark-mode-toggle" class="colorscheme-toggle">
+        <i class="fa fa-adjust fa-fw" aria-hidden="true"></i>
+    </a>
+</div>
+
+
+    <main class="wrapper">
+      <nav class="navigation">
+  <section class="container">
+    <a class="navigation-title" href="/">
+      isopov
+    </a>
+    
+      <input type="checkbox" id="menu-toggle" />
+      <label class="menu-button float-right" for="menu-toggle">
+        <i class="fa fa-bars fa-fw" aria-hidden="true"></i>
+      </label>
+      <ul class="navigation-list">
+        
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/about/">About</a>
+            </li>
+          
+            <li class="navigation-item">
+              <a class="navigation-link" href="/posts/">Blog</a>
+            </li>
+          
+        
+        
+      </ul>
+    
+  </section>
+</nav>
+
+
+      <div class="content">
+        
+  <section class="container post">
+    <article>
+      <header>
+        <div class="post-title">
+          <h1 class="title">Collisions of hashcodes - much more real than an md5 collision</h1>
+        </div>
+        <div class="post-meta">
+          <div class="date">
+            <span class="posted-on">
+              <i class="fa fa-calendar" aria-hidden="true"></i>
+              <time datetime='2011-03-26T10:19:24&#43;03:00'>
+                March 26, 2011
+              </time>
+            </span>
+            <span class="reading-time">
+              <i class="fa fa-clock-o" aria-hidden="true"></i>
+              3-minute read
+            </span>
+          </div>
+          
+          
+          <div class="tags">
+  <i class="fa fa-tag" aria-hidden="true"></i>
+    <a href="/tags/java/">Java</a></div>
+
+        </div>
+      </header>
+
+      <div>
+        
+        <p>So okay, hashcode is int and so there are only 4294967296 distinct hashcodes. It is not a little number, but in modern systems there could be definitely much more objects.</p>
+<p>In a <a href="http://www.javapuzzlers.com/">very good book</a> by Joshua Bloch I have read that there is a probability that two consequently created objects will have an equal system identity hashcode. Actually from the time of publishing that book major version of Java was released and the situation has improved dramatically. But still 232 is a very little number for objects. And still two consequently created objects may have an equal identity hashcode:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">  private static final int SIZE = 500000000;
+
+  public static void main(String[] args) {
+    int count = 0;
+    for (int i = 0; i &lt; SIZE; i++) {
+      if (new Object().hashCode() == new Object().hashCode()) {
+        count++;
+      }
+    }
+    System.out.println(count + &#34; of &#34; + SIZE + &#34; consequently created pairs of objects had equal hashcodes&#34;);
+  }
+</code></pre></div><p>On my machine that produced the following output:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">16 of 500000000 consequently created objects had equal hashcodes
+</code></pre></div><p>But creating objects and leaving them for garbage collection is not the usual way to deal with. At least for those objects for that we are worried about hashcodes and their quality. So here is the small test on how often the hashcodes will be collisional in a reasonably large pool of objects (The pool of 5000000 millions was chosen as it near to the size that can be checked on 32 bit JVM - actually running this program involves setting not standard size for the Java heap).</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">  private static final int SIZE = 50000000;
+
+  public static void main(String[] args) {
+    //number of objects with the same hashcode for each collisionall hashcode
+    Map&lt;Integer, Integer&gt; hashcodesMap = new HashMap&lt;Integer, Integer&gt;(SIZE);
+
+    for (int i = 0; i &lt; SIZE; i++) {
+      int hashCode = (new Object()).hashCode();
+      Integer integer = hashcodesMap.get(hashCode);
+      if (integer == null) {
+        hashcodesMap.put(hashCode, 1);
+      } else {
+        hashcodesMap.put(hashCode, integer + 1);
+      }
+    }
+    Map&lt;Integer, Integer&gt; collisionsFrequency = new HashMap&lt;Integer, Integer&gt;();
+
+    for (Integer value : hashcodesMap.values()) {
+      if (value &gt; 1) {
+        Integer integer = collisionsFrequency.get(value);
+        if (integer != null) {
+          collisionsFrequency.put(value, integer + 1);
+        } else {
+          collisionsFrequency.put(value, 1);
+        }
+      }
+    }
+    int totalCollisionObjects = 0;
+    for (Entry&lt;Integer, Integer&gt; entry : collisionsFrequency.entrySet()) {
+      totalCollisionObjects += entry.getValue() * entry.getKey();
+      System.out.println(entry.getValue() + &#34; hashcodes with &#34; + entry.getKey() + &#34; objects per each&#34;);
+    }
+    System.out.println(&#34;&#34;);
+    System.out.println(&#34;Only &#34; + (SIZE - totalCollisionObjects) + &#34; among &#34; + SIZE + &#34; have unique hashcode&#34;);
+  }
+</code></pre></div><p>This code produced the following output on my machine:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">8509145 hashcodes with 2 objects per each
+4195283 hashcodes with 3 objects per each
+1523953 hashcodes with 4 objects per each
+435035 hashcodes with 5 objects per each
+102849 hashcodes with 6 objects per each
+20149 hashcodes with 7 objects per each
+3455 hashcodes with 8 objects per each
+506 hashcodes with 9 objects per each
+72 hashcodes with 10 objects per each
+9 hashcodes with 11 objects per each
+1 hashcodes with 12 objects per each
+
+Only 11333712 among 50000000 have unique hashcode
+</code></pre></div><p>So the major portion of used identity hashcodes are collisional. And with that less than a percent of possible unique values of int was used. With less objects in out pool the result is better:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">317898 hashcodes with 2 objects per each
+15295 hashcodes with 3 objects per each
+524 hashcodes with 4 objects per each
+13 hashcodes with 5 objects per each
+
+Only 4316158 among 5000000 have unique hashcode
+</code></pre></div><p>Actually all this is not very impressive and leads to the one major consequence:
+Writing:</p>
+<div class="highlight"><pre style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-fallback" data-lang="fallback">  @Override
+  public boolean equals(Object obj) {
+    return System.identityHashCode(this) == System.identityHashCode(obj);
+  }
+</code></pre></div><p>is a really bad idea. And yes, I saw this (not exactly this, there were at least null-check in that method&hellip;).</p>
+
+      </div>
+
+
+      <footer>
+        
+
+
+        
+        
+        
+      </footer>
+    </article>
+
+    
+  </section>
+
+      </div>
+
+      
+  <footer class="footer">
+    <section class="container">
+      
+      
+        ©
+        
+        2020
+         Ivan Sopov 
+      
+      
+         · 
+        Powered by <a href="https://gohugo.io/">Hugo</a> & <a href="https://github.com/luizdepra/hugo-coder/">Coder</a>.
+      
+      
+    </section>
+  </footer>
+
+
+    </main>
+
+    
+      
+        
+        <script src="/js/dark-mode.min.0213e1773e6d1c5a644f847c67a6f8abac49a3776e2976f6008038af8c5b76a1.js"></script>
+      
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+  </body>
+
+</html>
