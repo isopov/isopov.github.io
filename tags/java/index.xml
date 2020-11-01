@@ -6,7 +6,16 @@
     <description>Recent content in Java on isopov</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 28 Dec 2013 17:42:46 +0300</lastBuildDate><atom:link href="https://isopov.github.io/tags/java/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 01 Nov 2020 16:34:58 +0300</lastBuildDate><atom:link href="https://isopov.github.io/tags/java/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Profiling Java CPU and RAM with Mission Control</title>
+      <link>https://isopov.github.io/posts/jmc-profiling-cpu-and-memory/</link>
+      <pubDate>Sun, 01 Nov 2020 16:34:58 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/jmc-profiling-cpu-and-memory/</guid>
+      <description>Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently we have a plenty of profilers and more then that - many of them are completely free to use. One of them is Java Mission Control. It was a commercial offering with limited free version, but now it is completely free and open sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production.</description>
+    </item>
+    
     <item>
       <title>Learning Vaadin7 Review</title>
       <link>https://isopov.github.io/posts/learning-vaadin7-review/</link>
