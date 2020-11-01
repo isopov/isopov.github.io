@@ -6,7 +6,17 @@
     <description>Recent content on isopov</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sat, 15 Sep 2018 15:37:17 +0300</lastBuildDate><atom:link href="https://isopov.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 01 Nov 2020 13:35:52 +0300</lastBuildDate><atom:link href="https://isopov.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Using map[]struct{} or map[]bool in Golang</title>
+      <link>https://isopov.github.io/posts/map-bool-or-struct/</link>
+      <pubDate>Sun, 01 Nov 2020 13:35:52 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/map-bool-or-struct/</guid>
+      <description>In Golang you do not have set data structure. So you can use map instead. When you do not need values there are two options widely used - using empty struct{} or bool as value. struct{} should be more performant, while bool is more convinient. I decided to check the first promise myslef. Golang have benchamrks support in its standard library. SO I wrote this one:
+package mapstruct import ( &amp;#34;math/rand&amp;#34; &amp;#34;testing&amp;#34; ) func input() []int { slice := make([]int, 10_000) for i := 0; i &amp;lt; 10_000; i++ { slice[i] = rand.</description>
+    </item>
+    
     <item>
       <title>Multithreaded Factorial With Threadpoolexecutor</title>
       <link>https://isopov.github.io/multithreaded-factorial-with-threadpoolexecutor/</link>
