@@ -6,14 +6,24 @@
     <description>Recent content in Posts on isopov</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Sun, 01 Nov 2020 16:34:58 +0300</lastBuildDate><atom:link href="https://isopov.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 04 Nov 2020 10:51:48 +0300</lastBuildDate><atom:link href="https://isopov.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Updating value in cache or simply invalidate it instead</title>
+      <link>https://isopov.github.io/posts/cache-update-or-invalidate/</link>
+      <pubDate>Wed, 04 Nov 2020 10:51:48 +0300</pubDate>
+      
+      <guid>https://isopov.github.io/posts/cache-update-or-invalidate/</guid>
+      <description>Recently I worked on a process of updating many entities in DB. And since these entities are read really often, there was a Redis-based cache in front of DB. After updating the entity in DB it was updated in the cache. And to be safe the whole process was under Redsic-based lock. So:
+ Lock for the entity is taken in Redis Entity is updated in DB Entity is updated in Redis Lost is released in Redis  Everything is good and data is consistent everywhere, but this process is too long.</description>
+    </item>
+    
     <item>
       <title>Profiling Java CPU and RAM with Mission Control</title>
       <link>https://isopov.github.io/posts/jmc-profiling-cpu-and-memory/</link>
       <pubDate>Sun, 01 Nov 2020 16:34:58 +0300</pubDate>
       
       <guid>https://isopov.github.io/posts/jmc-profiling-cpu-and-memory/</guid>
-      <description>Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently we have a plenty of profilers and more then that - many of them are completely free to use. One of them is Java Mission Control. It was a commercial offering with limited free version, but now it is completely free and open sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production.</description>
+      <description>Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently, we have plenty of profilers, and more than that - many of them are completely free to use. One of them is Java Mission Control. It was a commercial offering with a limited free version, but now it is completely free and open-sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production.</description>
     </item>
     
     <item>
