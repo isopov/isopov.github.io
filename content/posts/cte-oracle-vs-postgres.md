@@ -4,6 +4,8 @@ date: 2018-09-15T15:37:17+03:00
 draft: false
 tags: ["SQL", "Oracle", "Postgres"]
 ---
+UPDATE(2021-11-08): Described here has changed in [Postgres 12](https://www.postgresql.org/docs/12/queries-with.html) (more recent versions have even better documentation on this).
+
 Major part of my career to the moment passed working with databases and mostly with Oracle and Postgres. Several years ago I was really surprised by the difference in handling CTE (common table expressions) in these databases. From that time I spread this knowledge and recreated a sample for it several times. The last one was this week and I decided to store it somewhere - this mostly dead blog seems like a good place ;-) 
 So here is a really simple case of using CTE on Oracle. 
 
