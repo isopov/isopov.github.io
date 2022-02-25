@@ -1,6 +1,6 @@
 +++ 
 draft = true
-date = 2022-02-025T13:30:49+03:00
+date = 2022-02-25T13:30:49+03:00
 title = "Go sync.Pool"
 tags = ["Golang"]
 +++ 
