@@ -8,7 +8,7 @@ I've posted my brief experiments with sync.Pool in go. However, reading about it
 It is easy to trap into old information regarding sync.Pool and gc interrogation. [Since go 1.13 sync.Pool is not cleared completely on every gc](https://github.com/golang/go/commit/2dcbf8b3691e72d1b04e9376488cef3b6f93b286). However, it is still affected by gc. Suppose the following code:
 
 
-```
+```go
 type Obj []int
 
 func (o *Obj) Fill() {
@@ -47,7 +47,7 @@ func WorkWithPool() {
 }
 ```
 And let's use it this way:
-```
+```go
 func BenchmarkPool(b *testing.B) {
 	b.Run("OnlyGC", func(b *testing.B) {
 		b.ReportAllocs()
