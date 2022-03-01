@@ -24,8 +24,7 @@ public int sum(int x, int y); The main question for implementation is surely dea
 <meta property="article:modified_time" content="2015-08-15T23:22:39+03:00">
 <title>
 Benchmarking an interview question · isopov
-</title>
-<link rel=canonical href=https://isopov.github.io/posts/benchmarking-add-exact/>
+</title><link rel=canonical href=https://isopov.github.io/posts/benchmarking-add-exact/>
 <link rel=preload href="/fonts/forkawesome-webfont.woff2?v=1.2.0" as=font type=font/woff2 crossorigin>
 <link rel=stylesheet href=/css/coder.min.d9fddbffe6f27e69985dc5fe0471cdb0e57fbf4775714bc3d847accb08f4a1f6.css integrity="sha256-2f3b/+byfmmYXcX+BHHNsOV/v0d1cUvD2Eesywj0ofY=" crossorigin=anonymous media=screen>
 <link rel=stylesheet href=/css/coder-dark.min.002ee2378e14c7a68f1f0a53d9694ed252090987c4e768023fac694a4fc5f793.css integrity="sha256-AC7iN44Ux6aPHwpT2WlO0lIJCYfE52gCP6xpSk/F95M=" crossorigin=anonymous media=screen>
@@ -33,15 +32,13 @@ Benchmarking an interview question · isopov
 <link rel=icon type=image/png href=/images/favicon-16x16.png sizes=16x16>
 <link rel=apple-touch-icon href=/images/apple-touch-icon.png>
 <link rel=apple-touch-icon sizes=180x180 href=/images/apple-touch-icon.png>
-<meta name=generator content="Hugo 0.92.2">
-</head>
-<body class="preload-transitions colorscheme-auto">
+<meta name=generator content="Hugo 0.93.0">
+</head><body class="preload-transitions colorscheme-auto">
 <div class=float-container>
 <a id=dark-mode-toggle class=colorscheme-toggle>
 <i class="fa fa-adjust fa-fw" aria-hidden=true></i>
 </a>
-</div>
-<main class=wrapper>
+</div><main class=wrapper>
 <nav class=navigation>
 <section class=container>
 <a class=navigation-title href=/>
@@ -54,14 +51,9 @@ isopov
 <ul class=navigation-list>
 <li class=navigation-item>
 <a class=navigation-link href=/about/>About</a>
-</li>
-<li class=navigation-item>
+</li><li class=navigation-item>
 <a class=navigation-link href=/posts/>Blog</a>
-</li>
-</ul>
-</section>
-</nav>
-<div class=content>
+</li></ul></section></nav><div class=content>
 <section class="container post">
 <article>
 <header>
@@ -70,9 +62,7 @@ isopov
 <a class=title-link href=https://isopov.github.io/posts/benchmarking-add-exact/>
 Benchmarking an interview question
 </a>
-</h1>
-</div>
-<div class=post-meta>
+</h1></div><div class=post-meta>
 <div class=date>
 <span class=posted-on>
 <i class="fa fa-calendar" aria-hidden=true></i>
@@ -84,50 +74,32 @@ August 15, 2015
 <i class="fa fa-clock-o" aria-hidden=true></i>
 3-minute read
 </span>
-</div>
-</div>
-</header>
-<div>
-<p><em>Author benchmarks a super-simple method with a dumb implementation from his recent job interview. Results of this benchmark contradict with assumptions. The process of benchmarking produces some public benefit.</em></p>
-<p>So, on a recent job interview it was suggested to write implementation for a really simple method</p>
-<div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>public int sum(int x, int y);
-</code></pre></div><p>The main question for implementation is surely dealing with integer overflow (we were speaking about Java programming language). As it was left for me to decide what to do in case of overflow I suggested a standard way - throwing exception. In Java8 there is a standard method that does exactly this - Math.addExact. However I needed to re-implement it myself in order to use on older versions. To ease possible migration I used the same ArithmeticException that is used in the 8th version of standard library.</p>
-<p>Another difficulty that is natural for a job interview is that I could look some nice bit-shifting trick on the Internet, but needed to write that implementation myself. Since we are dealing with ints it is really easy to write correct implementation just casting arguments to longs inside the method:</p>
-<div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>static int sum(int x, int y) {
-        long xl = x;
-        long yl = y;
-        long result = xl + yl;
-
-        if (result &lt; Integer.MIN_VALUE || result &gt; Integer.MAX_VALUE) {
-            throw new ArithmeticException(&#34;integer overflow&#34;);
-        }
-
-        return (int) result;
-    }
-</code></pre></div><p>This method is correct - I wrote some tests to prove it. But my assumption was that it will be much slower than the standard one, or some using some bit-shifting operations.</p>
-<p>After the interview I have benchmarked it together with the standard one and was very surprised to see that this dumb implementation is even marginally better than the standard one on my laptop (Java8 on the x64 CPU and Linux OS). I decided to dive a bit deeper with the perf profiler and support for it in the JMH, but discovered that this support has been broken for my version of linux kernel and perf tool. I <a href=http://mail.openjdk.java.net/pipermail/jmh-dev/2015-August/001996.html>reported this regression</a> and <a href=http://mail.openjdk.java.net/pipermail/jmh-dev/2015-August/002006.html>it was fixed the same day</a> and <a href=http://mail.openjdk.java.net/pipermail/jmh-dev/2015-August/002016.html>released on the next day</a>. So even such a very simple interview question may produce some public benefit.</p>
-<p>Back to this method, here are the result of benchmarking with the perfnorm profiler (some results omitted for brevity):</p>
-<div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback>Benchmark                                          Mode  Cnt   Score    Error  Units
-AddExactBenchmark.addWithLongs                     avgt   15   4.288 ±  0.043  ns/op
-AddExactBenchmark.addWithLongs:·CPI                avgt    3   0.313 ±  0.014   #/op
-AddExactBenchmark.addWithLongs:·branches           avgt    3   7.921 ±  2.076   #/op
-AddExactBenchmark.addWithLongs:·cycles             avgt    3  12.057 ±  2.867   #/op
-AddExactBenchmark.addWithLongs:·instructions       avgt    3  38.571 ±  8.450   #/op
-AddExactBenchmark.mathAddExact                     avgt   15   4.306 ±  0.100  ns/op
-AddExactBenchmark.mathAddExact:·CPI                avgt    3   0.356 ±  0.072   #/op
-AddExactBenchmark.mathAddExact:·branches           avgt    3   6.782 ±  0.589   #/op
-AddExactBenchmark.mathAddExact:·cycles             avgt    3  12.102 ±  3.079   #/op
-AddExactBenchmark.mathAddExact:·instructions       avgt    3  33.972 ±  2.560   #/op
-</code></pre></div><p>Let me comment these results a bit. The difference between methods is really small - it varies from run to run (maybe I should try more forks), but my dumb implementation is always better than the standard one. My next assumption (the very first one - that standard method is faster in all cases - was not true) is that this will not be the case on x86 and other 32-bit hardware and JVMs. This dumb implementation has more instructions than the standard one (instructions result), but exact instructions seems cheaper since CPU executes more of them per cycle (CPI - cycles per instruction - result that is the inverse of what I&rsquo;m talking about) and as a sequence - a bit less cycles are used for execution.</p>
-<p>Another interesting result (probably it would be better to observe it with something like perfasm, but I have no such experience) is that this dumb implementation has more branches, than the standard one.</p>
-<p>The source for this benchmark may be <a href=https://github.com/isopov/isopov-jmh/blob/master/src/main/java/com/sopovs/moradanen/jmh/AddExactBenchmark.java>found on Github</a>.</p>
-</div>
-<footer>
-</footer>
-</article>
-</section>
-</div>
-<footer class=footer>
+</div></div></header><div>
+<p><em>Author benchmarks a super-simple method with a dumb implementation from his recent job interview. Results of this benchmark contradict with assumptions. The process of benchmarking produces some public benefit.</em></p><p>So, on a recent job interview it was suggested to write implementation for a really simple method</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>public int sum(int x, int y);
+</span></span></code></pre></div><p>The main question for implementation is surely dealing with integer overflow (we were speaking about Java programming language). As it was left for me to decide what to do in case of overflow I suggested a standard way - throwing exception. In Java8 there is a standard method that does exactly this - Math.addExact. However I needed to re-implement it myself in order to use on older versions. To ease possible migration I used the same ArithmeticException that is used in the 8th version of standard library.</p><p>Another difficulty that is natural for a job interview is that I could look some nice bit-shifting trick on the Internet, but needed to write that implementation myself. Since we are dealing with ints it is really easy to write correct implementation just casting arguments to longs inside the method:</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>static int sum(int x, int y) {
+</span></span><span style=display:flex><span>        long xl = x;
+</span></span><span style=display:flex><span>        long yl = y;
+</span></span><span style=display:flex><span>        long result = xl + yl;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        if (result &lt; Integer.MIN_VALUE || result &gt; Integer.MAX_VALUE) {
+</span></span><span style=display:flex><span>            throw new ArithmeticException(&#34;integer overflow&#34;);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        return (int) result;
+</span></span><span style=display:flex><span>    }
+</span></span></code></pre></div><p>This method is correct - I wrote some tests to prove it. But my assumption was that it will be much slower than the standard one, or some using some bit-shifting operations.</p><p>After the interview I have benchmarked it together with the standard one and was very surprised to see that this dumb implementation is even marginally better than the standard one on my laptop (Java8 on the x64 CPU and Linux OS). I decided to dive a bit deeper with the perf profiler and support for it in the JMH, but discovered that this support has been broken for my version of linux kernel and perf tool. I <a href=http://mail.openjdk.java.net/pipermail/jmh-dev/2015-August/001996.html>reported this regression</a> and <a href=http://mail.openjdk.java.net/pipermail/jmh-dev/2015-August/002006.html>it was fixed the same day</a> and <a href=http://mail.openjdk.java.net/pipermail/jmh-dev/2015-August/002016.html>released on the next day</a>. So even such a very simple interview question may produce some public benefit.</p><p>Back to this method, here are the result of benchmarking with the perfnorm profiler (some results omitted for brevity):</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>Benchmark                                          Mode  Cnt   Score    Error  Units
+</span></span><span style=display:flex><span>AddExactBenchmark.addWithLongs                     avgt   15   4.288 ±  0.043  ns/op
+</span></span><span style=display:flex><span>AddExactBenchmark.addWithLongs:·CPI                avgt    3   0.313 ±  0.014   #/op
+</span></span><span style=display:flex><span>AddExactBenchmark.addWithLongs:·branches           avgt    3   7.921 ±  2.076   #/op
+</span></span><span style=display:flex><span>AddExactBenchmark.addWithLongs:·cycles             avgt    3  12.057 ±  2.867   #/op
+</span></span><span style=display:flex><span>AddExactBenchmark.addWithLongs:·instructions       avgt    3  38.571 ±  8.450   #/op
+</span></span><span style=display:flex><span>AddExactBenchmark.mathAddExact                     avgt   15   4.306 ±  0.100  ns/op
+</span></span><span style=display:flex><span>AddExactBenchmark.mathAddExact:·CPI                avgt    3   0.356 ±  0.072   #/op
+</span></span><span style=display:flex><span>AddExactBenchmark.mathAddExact:·branches           avgt    3   6.782 ±  0.589   #/op
+</span></span><span style=display:flex><span>AddExactBenchmark.mathAddExact:·cycles             avgt    3  12.102 ±  3.079   #/op
+</span></span><span style=display:flex><span>AddExactBenchmark.mathAddExact:·instructions       avgt    3  33.972 ±  2.560   #/op
+</span></span></code></pre></div><p>Let me comment these results a bit. The difference between methods is really small - it varies from run to run (maybe I should try more forks), but my dumb implementation is always better than the standard one. My next assumption (the very first one - that standard method is faster in all cases - was not true) is that this will not be the case on x86 and other 32-bit hardware and JVMs. This dumb implementation has more instructions than the standard one (instructions result), but exact instructions seems cheaper since CPU executes more of them per cycle (CPI - cycles per instruction - result that is the inverse of what I&rsquo;m talking about) and as a sequence - a bit less cycles are used for execution.</p><p>Another interesting result (probably it would be better to observe it with something like perfasm, but I have no such experience) is that this dumb implementation has more branches, than the standard one.</p><p>The source for this benchmark may be <a href=https://github.com/isopov/isopov-jmh/blob/master/src/main/java/com/sopovs/moradanen/jmh/AddExactBenchmark.java>found on Github</a>.</p></div><footer>
+</footer></article></section></div><footer class=footer>
 <section class=container>
 ©
 2020 -
@@ -135,9 +107,5 @@ AddExactBenchmark.mathAddExact:·instructions       avgt    3  33.972 ±  2.560 
 Ivan Sopov
 ·
 Powered by <a href=https://gohugo.io/>Hugo</a> & <a href=https://github.com/luizdepra/hugo-coder/>Coder</a>.
-</section>
-</footer>
-</main>
-<script src=/js/coder.min.39a51230dce2ac866c049b52573e38bf60666af4bc63c1bdf203b9b2d95b1cd6.js integrity="sha256-OaUSMNzirIZsBJtSVz44v2BmavS8Y8G98gO5stlbHNY="></script>
-</body>
-</html>
+</section></footer></main><script src=/js/coder.min.8fb86376a16e684af472a329aef502dbebcfab65ce264e9750d144912947c602.js integrity="sha256-j7hjdqFuaEr0cqMprvUC2+vPq2XOJk6XUNFEkSlHxgI="></script>
+</body></html>
