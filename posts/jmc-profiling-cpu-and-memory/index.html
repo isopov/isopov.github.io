@@ -1,79 +1,10 @@
-<!doctype html><html lang=en>
-<head>
-<meta charset=utf-8>
-<meta name=viewport content="width=device-width,initial-scale=1">
-<meta http-equiv=content-language content="en">
-<meta name=color-scheme content="light dark">
-<meta name=author content="Ivan Sopov">
-<meta name=description content="Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently, we have plenty of profilers, and more than that - many of them are completely free to use. One of them is Java Mission Control. It was a commercial offering with a limited free version, but now it is completely free and open-sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production.">
-<meta name=keywords content="blog,developer,personal">
-<meta name=twitter:card content="summary">
-<meta name=twitter:title content="Profiling Java CPU and RAM with Mission Control">
-<meta name=twitter:description content="Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently, we have plenty of profilers, and more than that - many of them are completely free to use. One of them is Java Mission Control. It was a commercial offering with a limited free version, but now it is completely free and open-sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production.">
-<meta property="og:title" content="Profiling Java CPU and RAM with Mission Control">
-<meta property="og:description" content="Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently, we have plenty of profilers, and more than that - many of them are completely free to use. One of them is Java Mission Control. It was a commercial offering with a limited free version, but now it is completely free and open-sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production.">
-<meta property="og:type" content="article">
-<meta property="og:url" content="https://isopov.github.io/posts/jmc-profiling-cpu-and-memory/"><meta property="article:section" content="posts">
-<meta property="article:published_time" content="2020-11-01T16:34:58+03:00">
-<meta property="article:modified_time" content="2020-11-01T16:34:58+03:00">
-<title>
-Profiling Java CPU and RAM with Mission Control · isopov
-</title><link rel=canonical href=https://isopov.github.io/posts/jmc-profiling-cpu-and-memory/>
-<link rel=preload href="/fonts/forkawesome-webfont.woff2?v=1.2.0" as=font type=font/woff2 crossorigin>
-<link rel=stylesheet href=/css/coder.min.d9fddbffe6f27e69985dc5fe0471cdb0e57fbf4775714bc3d847accb08f4a1f6.css integrity="sha256-2f3b/+byfmmYXcX+BHHNsOV/v0d1cUvD2Eesywj0ofY=" crossorigin=anonymous media=screen>
-<link rel=stylesheet href=/css/coder-dark.min.002ee2378e14c7a68f1f0a53d9694ed252090987c4e768023fac694a4fc5f793.css integrity="sha256-AC7iN44Ux6aPHwpT2WlO0lIJCYfE52gCP6xpSk/F95M=" crossorigin=anonymous media=screen>
-<link rel=icon type=image/png href=/images/favicon-32x32.png sizes=32x32>
-<link rel=icon type=image/png href=/images/favicon-16x16.png sizes=16x16>
-<link rel=apple-touch-icon href=/images/apple-touch-icon.png>
-<link rel=apple-touch-icon sizes=180x180 href=/images/apple-touch-icon.png>
-<meta name=generator content="Hugo 0.93.0">
-</head><body class="preload-transitions colorscheme-auto">
-<div class=float-container>
-<a id=dark-mode-toggle class=colorscheme-toggle>
-<i class="fa fa-adjust fa-fw" aria-hidden=true></i>
-</a>
-</div><main class=wrapper>
-<nav class=navigation>
-<section class=container>
-<a class=navigation-title href=/>
-isopov
-</a>
+<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=content-language content="en"><meta name=color-scheme content="light dark"><meta name=author content="Ivan Sopov"><meta name=description content="Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently, we have plenty of profilers, and more than that - many of them are completely free to use. One of them is Java Mission Control. It was a commercial offering with a limited free version, but now it is completely free and open-sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production."><meta name=keywords content="blog,developer,personal"><meta name=twitter:card content="summary"><meta name=twitter:title content="Profiling Java CPU and RAM with Mission Control"><meta name=twitter:description content="Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently, we have plenty of profilers, and more than that - many of them are completely free to use. One of them is Java Mission Control. It was a commercial offering with a limited free version, but now it is completely free and open-sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production."><meta property="og:title" content="Profiling Java CPU and RAM with Mission Control"><meta property="og:description" content="Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently, we have plenty of profilers, and more than that - many of them are completely free to use. One of them is Java Mission Control. It was a commercial offering with a limited free version, but now it is completely free and open-sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production."><meta property="og:type" content="article"><meta property="og:url" content="https://isopov.github.io/posts/jmc-profiling-cpu-and-memory/"><meta property="article:section" content="posts"><meta property="article:published_time" content="2020-11-01T16:34:58+03:00"><meta property="article:modified_time" content="2020-11-01T16:34:58+03:00"><title>Profiling Java CPU and RAM with Mission Control · isopov</title><link rel=canonical href=https://isopov.github.io/posts/jmc-profiling-cpu-and-memory/><link rel=preload href="/fonts/forkawesome-webfont.woff2?v=1.2.0" as=font type=font/woff2 crossorigin><link rel=stylesheet href=/css/coder.min.d9fddbffe6f27e69985dc5fe0471cdb0e57fbf4775714bc3d847accb08f4a1f6.css integrity="sha256-2f3b/+byfmmYXcX+BHHNsOV/v0d1cUvD2Eesywj0ofY=" crossorigin=anonymous media=screen><link rel=stylesheet href=/css/coder-dark.min.002ee2378e14c7a68f1f0a53d9694ed252090987c4e768023fac694a4fc5f793.css integrity="sha256-AC7iN44Ux6aPHwpT2WlO0lIJCYfE52gCP6xpSk/F95M=" crossorigin=anonymous media=screen><link rel=icon type=image/png href=/images/favicon-32x32.png sizes=32x32><link rel=icon type=image/png href=/images/favicon-16x16.png sizes=16x16><link rel=apple-touch-icon href=/images/apple-touch-icon.png><link rel=apple-touch-icon sizes=180x180 href=/images/apple-touch-icon.png><meta name=generator content="Hugo 0.99.0"></head><body class="preload-transitions colorscheme-auto"><div class=float-container><a id=dark-mode-toggle class=colorscheme-toggle><i class="fa fa-adjust fa-fw" aria-hidden=true></i></a></div><main class=wrapper><nav class=navigation><section class=container><a class=navigation-title href=/>isopov</a>
 <input type=checkbox id=menu-toggle>
-<label class="menu-button float-right" for=menu-toggle>
-<i class="fa fa-bars fa-fw" aria-hidden=true></i>
-</label>
-<ul class=navigation-list>
-<li class=navigation-item>
-<a class=navigation-link href=/about/>About</a>
-</li><li class=navigation-item>
-<a class=navigation-link href=/posts/>Blog</a>
-</li></ul></section></nav><div class=content>
-<section class="container post">
-<article>
-<header>
-<div class=post-title>
-<h1 class=title>
-<a class=title-link href=https://isopov.github.io/posts/jmc-profiling-cpu-and-memory/>
-Profiling Java CPU and RAM with Mission Control
-</a>
-</h1></div><div class=post-meta>
-<div class=date>
-<span class=posted-on>
-<i class="fa fa-calendar" aria-hidden=true></i>
-<time datetime=2020-11-01T16:34:58+03:00>
-November 1, 2020
-</time>
-</span>
-<span class=reading-time>
-<i class="fa fa-clock-o" aria-hidden=true></i>
-5-minute read
-</span>
-</div><div class=tags>
-<i class="fa fa-tag" aria-hidden=true></i>
-<span class=tag>
-<a href=/tags/java/>Java</a>
-</span></div></div></header><div>
-<p>Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently, we have plenty of profilers, and more than that - many of them are completely free to use. One of them is <a href=https://openjdk.java.net/projects/jmc/>Java Mission Control</a>. It was a commercial offering with a limited free version, but now it is completely free and open-sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production. Now you can download builds of JMC from different vendors. I downloaded one from <a href=https://www.azul.com/products/zulu-mission-control/>Azul</a>.</p><p>But let&rsquo;s dive into code. First of all, I wanted to provide a sample to profile the CPU-bounded algorithm. And I wrote this:</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>import org.springframework.web.bind.annotation.GetMapping;
+<label class="menu-button float-right" for=menu-toggle><i class="fa fa-bars fa-fw" aria-hidden=true></i></label><ul class=navigation-list><li class=navigation-item><a class=navigation-link href=/about/>About</a></li><li class=navigation-item><a class=navigation-link href=/posts/>Blog</a></li></ul></section></nav><div class=content><section class="container post"><article><header><div class=post-title><h1 class=title><a class=title-link href=https://isopov.github.io/posts/jmc-profiling-cpu-and-memory/>Profiling Java CPU and RAM with Mission Control</a></h1></div><div class=post-meta><div class=date><span class=posted-on><i class="fa fa-calendar" aria-hidden=true></i>
+<time datetime=2020-11-01T16:34:58+03:00>November 1, 2020</time></span>
+<span class=reading-time><i class="fa fa-clock-o" aria-hidden=true></i>
+5-minute read</span></div><div class=tags><i class="fa fa-tag" aria-hidden=true></i>
+<span class=tag><a href=/tags/java/>Java</a></span></div></div></header><div><p>Some time ago I was a lecturer on Java courses and wanted to craft a sample for profiling Java applications. Currently, we have plenty of profilers, and more than that - many of them are completely free to use. One of them is <a href=https://openjdk.java.net/projects/jmc/>Java Mission Control</a>. It was a commercial offering with a limited free version, but now it is completely free and open-sourced. It was required to buy it to use in production back in the days and this alone should give a hint, that this profiler is so lightweight that it can be used in production. Now you can download builds of JMC from different vendors. I downloaded one from <a href=https://www.azul.com/products/zulu-mission-control/>Azul</a>.</p><p>But let&rsquo;s dive into code. First of all, I wanted to provide a sample to profile the CPU-bounded algorithm. And I wrote this:</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>import org.springframework.web.bind.annotation.GetMapping;
 </span></span><span style=display:flex><span>import org.springframework.web.bind.annotation.PathVariable;
 </span></span><span style=display:flex><span>import org.springframework.web.bind.annotation.RestController;
 </span></span><span style=display:flex><span>
@@ -91,8 +22,7 @@ November 1, 2020
 </span></span><span style=display:flex><span>        return result.doubleValue();
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>What can be more CPU-intensive than crunching numbers? I started mission control flight recording with default settings and started updated the page <code>http://localhost:8080/factorial/100000</code>. Factorial for 100_000 is too large to be represented as double and I got <code>"Infinity"</code> all the time, but this computation lasted for several seconds every time, so there was more computation, then waiting for me requesting it one more time.</p><p>Right on the first page of the flight recording result, there is the following statement:</p><blockquote>
-<p>The program allocated 95.2 % of the memory outside of TLABs.
+</span></span></code></pre></div><p>What can be more CPU-intensive than crunching numbers? I started mission control flight recording with default settings and started updated the page <code>http://localhost:8080/factorial/100000</code>. Factorial for 100_000 is too large to be represented as double and I got <code>"Infinity"</code> all the time, but this computation lasted for several seconds every time, so there was more computation, then waiting for me requesting it one more time.</p><p>Right on the first page of the flight recording result, there is the following statement:</p><blockquote><p>The program allocated 95.2 % of the memory outside of TLABs.
 Allocating objects outside of Thread Local Allocation Buffers (TLABs) is more expensive than allocating inside TLABs. This may be acceptable if the individual allocations are intended to be larger than a reasonable TLAB. It may be possible to avoid this by decreasing the size of the individual allocations. There are some TLAB related JVM flags that you can experiment with, but it is usually better to let the JVM manage TLAB sizes automatically.</p></blockquote><p>In the Memory section, I found that it was allocated more than 200GB of <code>int[]</code> arrays. That alone (and there were other allocations as well - 1.8GB of <code>BigInteger</code> objects among others) stand for more than 3 GB/s. And since these allocations were expensive outside TLABs (thread-local allocation buffers - allocating inside them is basically one internal memory increment most of the time) this is very close be the bottleneck of the algorithm.</p><p>I wanted to make a CPU-bound program but unintentionally made a RAM-bound one. Profiling results were an unexpected but really good sample that our assumptions do not always hold.</p><p>Nevertheless, let&rsquo;s profile another algorithm, that was originally meant to be RAM-bound. Here it is:</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>import org.springframework.web.bind.annotation.GetMapping;
 </span></span><span style=display:flex><span>import org.springframework.web.bind.annotation.PathVariable;
 </span></span><span style=display:flex><span>import org.springframework.web.bind.annotation.RestController;
@@ -122,14 +52,9 @@ Allocating objects outside of Thread Local Allocation Buffers (TLABs) is more ex
 </span></span><span style=display:flex><span>        return result;
 </span></span><span style=display:flex><span>    }
 </span></span><span style=display:flex><span>}
-</span></span></code></pre></div><p>It should be memory bound since it is doing almost only allocations. However JVM has a good just-in-time compiler (JIT) with good dead code elimination (DCE) and we must be sure, that our allocations will actually happen. For that reason, I fill them with garbage. If we are lucky enough pre-zeroing of allocated arrays will be eliminated by the JIT. But to not get our garbage eliminated also let&rsquo;s make a checksum of it and return to the caller.</p><p>So I fired several requests to <code>http://localhost:8080/allocate/10000</code>. Moreover, to fully load the allocator I fired these requests concurrently. I have RAM with two channels after all. So during 1-minute flight recording even more memory should be allocated, than was with my &ldquo;CPU-bound&rdquo; algorithm. But! Actually, without firing up profiler it should be clear that something is not going as expected, since running only one request to allocate 10_000 MBs takes several long seconds and profiler gives as an overwhelming result that only 44 GBs of <code>byte[]</code> arrays were allocated during the profiling session. That is less than 1 GB/s! Sure, modern machines can do better.</p><p>Let&rsquo;s look into the &ldquo;Method Profiling&rdquo; section. It has some unexpected results too. Most of the samples (7110) of this sampling profiler were caught in <code>java.util.Random.nextBytes(byte[])</code> method. That is my &ldquo;filing with garbage&rdquo; that ought to be very cheap and only serve the purpose of not eliminating allocation. The second method that caught most of samples is <code>MemoryLoadController.sum(byte[])</code> - 1696. The third is what I wanted to be the leader - <code>MemoryLoadController.allocate(int)</code> method itself with 8 samples, not counting any method calls inside it. That should be actual memory allocation.</p><p>It turns out that my second algorithm is not RAM-bound, but rather CPU-bound. That is another sample of our assumptions contradicting reality. But is it good, since in the end, I have two samples - one CPU-bound and one RAM-bound. Just that I have mistaken which one is which.</p></div><footer>
-</footer></article></section></div><footer class=footer>
-<section class=container>
-©
+</span></span></code></pre></div><p>It should be memory bound since it is doing almost only allocations. However JVM has a good just-in-time compiler (JIT) with good dead code elimination (DCE) and we must be sure, that our allocations will actually happen. For that reason, I fill them with garbage. If we are lucky enough pre-zeroing of allocated arrays will be eliminated by the JIT. But to not get our garbage eliminated also let&rsquo;s make a checksum of it and return to the caller.</p><p>So I fired several requests to <code>http://localhost:8080/allocate/10000</code>. Moreover, to fully load the allocator I fired these requests concurrently. I have RAM with two channels after all. So during 1-minute flight recording even more memory should be allocated, than was with my &ldquo;CPU-bound&rdquo; algorithm. But! Actually, without firing up profiler it should be clear that something is not going as expected, since running only one request to allocate 10_000 MBs takes several long seconds and profiler gives as an overwhelming result that only 44 GBs of <code>byte[]</code> arrays were allocated during the profiling session. That is less than 1 GB/s! Sure, modern machines can do better.</p><p>Let&rsquo;s look into the &ldquo;Method Profiling&rdquo; section. It has some unexpected results too. Most of the samples (7110) of this sampling profiler were caught in <code>java.util.Random.nextBytes(byte[])</code> method. That is my &ldquo;filing with garbage&rdquo; that ought to be very cheap and only serve the purpose of not eliminating allocation. The second method that caught most of samples is <code>MemoryLoadController.sum(byte[])</code> - 1696. The third is what I wanted to be the leader - <code>MemoryLoadController.allocate(int)</code> method itself with 8 samples, not counting any method calls inside it. That should be actual memory allocation.</p><p>It turns out that my second algorithm is not RAM-bound, but rather CPU-bound. That is another sample of our assumptions contradicting reality. But is it good, since in the end, I have two samples - one CPU-bound and one RAM-bound. Just that I have mistaken which one is which.</p></div><footer></footer></article></section></div><footer class=footer><section class=container>©
 2020 -
 2022
 Ivan Sopov
 ·
-Powered by <a href=https://gohugo.io/>Hugo</a> & <a href=https://github.com/luizdepra/hugo-coder/>Coder</a>.
-</section></footer></main><script src=/js/coder.min.8fb86376a16e684af472a329aef502dbebcfab65ce264e9750d144912947c602.js integrity="sha256-j7hjdqFuaEr0cqMprvUC2+vPq2XOJk6XUNFEkSlHxgI="></script>
-</body></html>
+Powered by <a href=https://gohugo.io/>Hugo</a> & <a href=https://github.com/luizdepra/hugo-coder/>Coder</a>.</section></footer></main><script src=/js/coder.min.8fb86376a16e684af472a329aef502dbebcfab65ce264e9750d144912947c602.js integrity="sha256-j7hjdqFuaEr0cqMprvUC2+vPq2XOJk6XUNFEkSlHxgI="></script></body></html>
