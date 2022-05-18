@@ -1,5 +1,8 @@
 #Gedit
 *~
 
+#Idea
+.idea/
+
 #Hugo temp files
 resources/

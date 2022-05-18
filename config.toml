@@ -1,7 +1,7 @@
 baseurl = "https://isopov.github.io"
 title = "isopov"
 
-theme = "hugo-coder"
+theme = ["hugo-chart", "hugo-coder"]
 
 languagecode = "en"
 defaultcontentlanguage = "en"
