@@ -41,3 +41,34 @@ First goes benchmark for Cipher doing AESGCMNoPadding decrypting and encrypting.
 {{< /chart >}}
 
 TODO: other benches
+
+{{< chart 90 200 >}}
+{
+    type: 'bar',
+    data: {
+        labels: ['Decrypt', 'Encrypt'],
+        datasets: [
+          {
+              label: 'Default',
+              data: [2741608, 1810941],
+              backgroundColor: 'yellow',
+            },
+            {
+              label: 'Corretto',
+              data: [1522272, 1560521],
+              backgroundColor: 'red',
+            },
+            {
+              label: 'Bouncycastle',
+              data: [1355433, 423344],
+              backgroundColor: 'green',
+            },
+            {
+              label: 'Conscrypt',
+              data: [1330481, 1103269],
+              backgroundColor: 'blue',
+            }
+          ],
+    }
+}
+{{< /chart >}}
