@@ -5,7 +5,7 @@ title = "Go scheduler fairness"
 tags = ["Golang"]
 +++ 
 Recently in Jaeger I stumbled at an interesting trace - the work was done for 1 second, than 20 there was a gap for 20 seconds and after that work continued. My best guess currently is that goroutine slept for 20 seconds. To reproduce it I wrote the following:
-```
+```go
 package main
 
 import (

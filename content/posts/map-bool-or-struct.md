@@ -5,7 +5,7 @@ title = "Using map[]struct{} or map[]bool in Golang"
 tags = ["Golang"]
 +++
 In Golang you do not have set data structure. So you can use map instead. When you do not need values there are two options widely used - using empty `struct{}` or `bool` as value. `struct{}` should be more performant, while `bool` is more convinient. I decided to check the first promise myslef. Golang have benchamrks support in its standard library. SO I wrote this one:
-```
+```go
 package mapstruct
 
 import (

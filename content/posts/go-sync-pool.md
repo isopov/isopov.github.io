@@ -6,7 +6,7 @@ tags = ["Golang"]
 +++ 
 Recently I've seen sync.Pools in various Go libraries. Sometimes I wondered wether it is worth using at all. So I wrote some tests. Here are they:
 
-```
+```go
 package main
 
 import (

@@ -2,10 +2,11 @@
 title: "Go sync.Pool contention"
 date: 2023-03-24T16:22:39+03:00
 draft: false
+tags: ["Golang"]
 ---
 Recently my colleague suggested that contention on a single sync.Pool in Go may hit performance. I decided to reproduce this performance hit in a benchmark. This is what I was capable of writing.
 
-```
+```go
 import (
 	"runtime"
 	"strconv"

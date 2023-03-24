@@ -5,7 +5,7 @@ title = "Moving work to another goroutine"
 tags = ["Golang"]
 +++
 Concurency in Go is super easy. Still to write it inside my very large work project I first needed to get my hands with it on really small and simple example. So I wrote one and it seems that this blog is a perfect place to store it.
-```
+```go
 package main
 
 import (
