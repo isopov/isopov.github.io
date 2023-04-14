@@ -9,7 +9,7 @@ public int sum(int x, int y); The main question for implementation is surely dea
 <label class="menu-button float-right" for=menu-toggle><i class="fa fa-bars fa-fw" aria-hidden=true></i></label><ul class=navigation-list><li class=navigation-item><a class=navigation-link href=/about/>About</a></li><li class=navigation-item><a class=navigation-link href=/posts/>Blog</a></li></ul></section></nav><div class=content><section class="container post"><article><header><div class=post-title><h1 class=title><a class=title-link href=https://isopov.github.io/posts/benchmarking-add-exact/>Benchmarking an interview question</a></h1></div><div class=post-meta><div class=date><span class=posted-on><i class="fa fa-calendar" aria-hidden=true></i>
 <time datetime=2015-08-15T23:22:39+03:00>August 15, 2015</time></span>
 <span class=reading-time><i class="fa fa-clock-o" aria-hidden=true></i>
-3-minute read</span></div></div></header><div><p><em>Author benchmarks a super-simple method with a dumb implementation from his recent job interview. Results of this benchmark contradict with assumptions. The process of benchmarking produces some public benefit.</em></p><p>So, on a recent job interview it was suggested to write implementation for a really simple method</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>public int sum(int x, int y);
+4-minute read</span></div></div></header><div><p><em>Author benchmarks a super-simple method with a dumb implementation from his recent job interview. Results of this benchmark contradict with assumptions. The process of benchmarking produces some public benefit.</em></p><p>So, on a recent job interview it was suggested to write implementation for a really simple method</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>public int sum(int x, int y);
 </span></span></code></pre></div><p>The main question for implementation is surely dealing with integer overflow (we were speaking about Java programming language). As it was left for me to decide what to do in case of overflow I suggested a standard way - throwing exception. In Java8 there is a standard method that does exactly this - Math.addExact. However I needed to re-implement it myself in order to use on older versions. To ease possible migration I used the same ArithmeticException that is used in the 8th version of standard library.</p><p>Another difficulty that is natural for a job interview is that I could look some nice bit-shifting trick on the Internet, but needed to write that implementation myself. Since we are dealing with ints it is really easy to write correct implementation just casting arguments to longs inside the method:</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>static int sum(int x, int y) {
 </span></span><span style=display:flex><span>        long xl = x;
 </span></span><span style=display:flex><span>        long yl = y;
@@ -32,7 +32,49 @@ public int sum(int x, int y); The main question for implementation is surely dea
 </span></span><span style=display:flex><span>AddExactBenchmark.mathAddExact:·branches           avgt    3   6.782 ±  0.589   #/op
 </span></span><span style=display:flex><span>AddExactBenchmark.mathAddExact:·cycles             avgt    3  12.102 ±  3.079   #/op
 </span></span><span style=display:flex><span>AddExactBenchmark.mathAddExact:·instructions       avgt    3  33.972 ±  2.560   #/op
-</span></span></code></pre></div><p>Let me comment these results a bit. The difference between methods is really small - it varies from run to run (maybe I should try more forks), but my dumb implementation is always better than the standard one. My next assumption (the very first one - that standard method is faster in all cases - was not true) is that this will not be the case on x86 and other 32-bit hardware and JVMs. This dumb implementation has more instructions than the standard one (instructions result), but exact instructions seems cheaper since CPU executes more of them per cycle (CPI - cycles per instruction - result that is the inverse of what I&rsquo;m talking about) and as a sequence - a bit less cycles are used for execution.</p><p>Another interesting result (probably it would be better to observe it with something like perfasm, but I have no such experience) is that this dumb implementation has more branches, than the standard one.</p><p>The source for this benchmark may be <a href=https://github.com/isopov/isopov-jmh/blob/master/src/main/java/com/sopovs/moradanen/jmh/AddExactBenchmark.java>found on Github</a>.</p></div><footer></footer></article></section></div><footer class=footer><section class=container>©
+</span></span></code></pre></div><p>Let me comment these results a bit. The difference between methods is really small - it varies from run to run (maybe I should try more forks), but my dumb implementation is always better than the standard one. My next assumption (the very first one - that standard method is faster in all cases - was not true) is that this will not be the case on x86 and other 32-bit hardware and JVMs. This dumb implementation has more instructions than the standard one (instructions result), but exact instructions seems cheaper since CPU executes more of them per cycle (CPI - cycles per instruction - result that is the inverse of what I&rsquo;m talking about) and as a sequence - a bit less cycles are used for execution.</p><p>Another interesting result (probably it would be better to observe it with something like perfasm, but I have no such experience) is that this dumb implementation has more branches, than the standard one.</p><p>The source for this benchmark is the following</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-java data-lang=java><span style=display:flex><span>@BenchmarkMode(Mode.<span style=color:#007f7f>AverageTime</span>)
+</span></span><span style=display:flex><span>@Fork(<span style=color:#ff0;font-weight:700>3</span>)
+</span></span><span style=display:flex><span>@State(Scope.<span style=color:#007f7f>Thread</span>)
+</span></span><span style=display:flex><span>@OutputTimeUnit(TimeUnit.<span style=color:#007f7f>NANOSECONDS</span>)
+</span></span><span style=display:flex><span>@Warmup(iterations = <span style=color:#ff0;font-weight:700>5</span>, time = <span style=color:#ff0;font-weight:700>1</span>, timeUnit = TimeUnit.<span style=color:#007f7f>SECONDS</span>)
+</span></span><span style=display:flex><span>@Measurement(iterations = <span style=color:#ff0;font-weight:700>5</span>, time = <span style=color:#ff0;font-weight:700>1</span>, timeUnit = TimeUnit.<span style=color:#007f7f>SECONDS</span>)
+</span></span><span style=display:flex><span><span style=color:#fff;font-weight:700>public</span> <span style=color:#fff;font-weight:700>class</span> AddExactBenchmark {
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#fff;font-weight:700>private</span> <span style=color:#fff;font-weight:700>int</span> x = Integer.<span style=color:#007f7f>MAX_VALUE</span> / <span style=color:#ff0;font-weight:700>3</span>, y = Integer.<span style=color:#007f7f>MAX_VALUE</span> / <span style=color:#ff0;font-weight:700>4</span>;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    @Benchmark
+</span></span><span style=display:flex><span>    <span style=color:#fff;font-weight:700>public</span> <span style=color:#fff;font-weight:700>int</span> mathAddExact() {
+</span></span><span style=display:flex><span>        <span style=color:#fff;font-weight:700>return</span> Math.<span style=color:#007f7f>addExact</span>(x, y);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    @Benchmark
+</span></span><span style=display:flex><span>    <span style=color:#fff;font-weight:700>public</span> <span style=color:#fff;font-weight:700>int</span> addWithLongs() {
+</span></span><span style=display:flex><span>        <span style=color:#fff;font-weight:700>return</span> addWithLongs(x, y);
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#fff;font-weight:700>static</span> <span style=color:#fff;font-weight:700>int</span> addWithLongs(<span style=color:#fff;font-weight:700>int</span> x, <span style=color:#fff;font-weight:700>int</span> y) {
+</span></span><span style=display:flex><span>        <span style=color:#fff;font-weight:700>long</span> xl = x;
+</span></span><span style=display:flex><span>        <span style=color:#fff;font-weight:700>long</span> yl = y;
+</span></span><span style=display:flex><span>        <span style=color:#fff;font-weight:700>long</span> result = xl + yl;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#fff;font-weight:700>if</span> (result &lt; Integer.<span style=color:#007f7f>MIN_VALUE</span> || result &gt; Integer.<span style=color:#007f7f>MAX_VALUE</span>) {
+</span></span><span style=display:flex><span>            <span style=color:#fff;font-weight:700>throw</span> <span style=color:#fff;font-weight:700>new</span> ArithmeticException(<span style=color:#0ff;font-weight:700>&#34;integer overflow&#34;</span>);
+</span></span><span style=display:flex><span>        }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#fff;font-weight:700>return</span> (<span style=color:#fff;font-weight:700>int</span>) result;
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>    <span style=color:#fff;font-weight:700>public</span> <span style=color:#fff;font-weight:700>static</span> <span style=color:#fff;font-weight:700>void</span> main(String[] args) <span style=color:#fff;font-weight:700>throws</span> RunnerException {
+</span></span><span style=display:flex><span>        Options opt = <span style=color:#fff;font-weight:700>new</span> OptionsBuilder()
+</span></span><span style=display:flex><span>                .<span style=color:#007f7f>include</span>(<span style=color:#0ff;font-weight:700>&#34;.*&#34;</span> + AddExactBenchmark.<span style=color:#007f7f>class</span>.<span style=color:#007f7f>getSimpleName</span>() + <span style=color:#0ff;font-weight:700>&#34;.*&#34;</span>)
+</span></span><span style=display:flex><span>                .<span style=color:#007f7f>addProfiler</span>(LinuxPerfNormProfiler.<span style=color:#007f7f>class</span>)
+</span></span><span style=display:flex><span>                .<span style=color:#007f7f>build</span>();
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>        <span style=color:#fff;font-weight:700>new</span> Runner(opt).<span style=color:#007f7f>run</span>();
+</span></span><span style=display:flex><span>    }
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div></div><footer></footer></article></section></div><footer class=footer><section class=container>©
 2020 -
 2023
 Ivan Sopov
