@@ -54,4 +54,49 @@ Let me comment these results a bit. The difference between methods is really sma
 
 Another interesting result (probably it would be better to observe it with something like perfasm, but I have no such experience) is that this dumb implementation has more branches, than the standard one.
 
-The source for this benchmark may be [found on Github](https://github.com/isopov/isopov-jmh/blob/master/src/main/java/com/sopovs/moradanen/jmh/AddExactBenchmark.java).
+The source for this benchmark is the following
+
+```java
+@BenchmarkMode(Mode.AverageTime)
+@Fork(3)
+@State(Scope.Thread)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
+@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+public class AddExactBenchmark {
+
+    private int x = Integer.MAX_VALUE / 3, y = Integer.MAX_VALUE / 4;
+
+    @Benchmark
+    public int mathAddExact() {
+        return Math.addExact(x, y);
+    }
+
+    @Benchmark
+    public int addWithLongs() {
+        return addWithLongs(x, y);
+    }
+
+    static int addWithLongs(int x, int y) {
+        long xl = x;
+        long yl = y;
+        long result = xl + yl;
+
+        if (result < Integer.MIN_VALUE || result > Integer.MAX_VALUE) {
+            throw new ArithmeticException("integer overflow");
+        }
+
+        return (int) result;
+
+    }
+
+    public static void main(String[] args) throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .include(".*" + AddExactBenchmark.class.getSimpleName() + ".*")
+                .addProfiler(LinuxPerfNormProfiler.class)
+                .build();
+
+        new Runner(opt).run();
+    }
+}
+```
