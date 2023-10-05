@@ -44,7 +44,7 @@
 </span></span><span style=display:flex><span>        }
 </span></span><span style=display:flex><span>    }
 </span></span></code></pre></div><p>I&rsquo;ve tried to improve the previous version using other amount of threads, since this version obviously uses division into mush smaller sub-tasks, but to no result. Maybe I used wrong <code>BlockingQueue&lt;Runnable></code>, but this may be regarded as the simplicity of using this API. And definitely <code>ForkJoinFramework</code> is superior here, since not only decision about which Queue to use is not needed but also the division into sub-tasks is much simpler.</p><p>As usual the full code for this example may be found on <a href=https://gist.github.com/1272876>github</a>.</p></div><footer></footer></article></section></div><footer class=footer><section class=container>©
-2020 -
+2011 -
 2023
 Ivan Sopov
 ·

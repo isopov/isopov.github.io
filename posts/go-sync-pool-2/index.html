@@ -107,7 +107,7 @@ It is easy to trap into old information regarding sync.Pool and gc interrogation
 </span></span><span style=display:flex><span>BenchmarkPool/FourGC-8         	   12048	   1012356 ns/op	  820327 B/op	       5 allocs/op
 </span></span></code></pre></div><p>Even one garbage collection hugely affects allocations of this test. Two garbage collections affect it even more, while any additionals have no effect. Suppose you have some near zero-allocating application that uses sync.Pools heavily in various places. Any change leading to memory allocation big enough for garbage collection happening may lead to
 cascading failure of protection from allocations and hiding the original cause of the allocation spike.</p></div><footer></footer></article></section></div><footer class=footer><section class=container>©
-2020 -
+2011 -
 2023
 Ivan Sopov
 ·

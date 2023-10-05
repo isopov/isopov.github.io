@@ -100,7 +100,7 @@ Here are the results with some omissions and reformatting to simplify reading.</
 </span></span><span style=display:flex><span>Benchmark_Pool/Parallelism_100/one_pool       	  	     10044 ns/op
 </span></span><span style=display:flex><span>Benchmark_Pool/Parallelism_100/many_pools     	  	      2295 ns/op
 </span></span></code></pre></div><p>It seems that with only 1 goroutine per CPU core this code for some reason suffers from contention more than with 2-5 goroutines. However in order to observe noticeable penalty we need 10+ goroutines per core. Keep in mind also that every operation here invokes Get on sync.Pool 1000 times and Put 1000 times also.</p><p>After writing and running this benchmark I conclude that there is no real danger in contention on sync.Pool and it may be used for really common low-level things.</p></div><footer></footer></article></section></div><footer class=footer><section class=container>©
-2020 -
+2011 -
 2023
 Ivan Sopov
 ·

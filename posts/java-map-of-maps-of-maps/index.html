@@ -105,7 +105,7 @@
 </span></span><span style=display:flex><span>Benchmark.singleMapExact:·gc.count            avgt   15      260.000            counts
 </span></span><span style=display:flex><span>Benchmark.singleMapExact:·gc.time             avgt   15      190.000                ms
 </span></span></code></pre></div><p>The map of maps of maps case without upfront map creation is obviously the slowest one. However its allocations per operations are the smallest too. But the performance difference is so huge, that it is pretty obvious that single map with record keys should be preferred. This may be retested with non-primitive record fields, however is some CPU-bound tasks the advantage of on way of dealing with maps over the other is obvious.</p></div><footer></footer></article></section></div><footer class=footer><section class=container>©
-2020 -
+2011 -
 2023
 Ivan Sopov
 ·

@@ -84,7 +84,7 @@ However it is possible to get into situation where Loom virtual threads will beh
 </span></span></code></pre></div><p>The idea is that we have two kinds of tasks - heavy and light. We do not care about performance of heavy tasks, so we even do not measure it. But we do care about light tasks performance. For this extreme case they do nothing except measuring their own performance. Also we start all the heavy threads first - this is a major factor playing against Loom virtual threads scheduler.</p><p>And the result is:</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>loom     21686
 </span></span><span style=display:flex><span>platform 313
 </span></span></code></pre></div><p>With platform threads our light tasks go executed 70 times faster. This may be a problem. Should fairness be introduced into Loom scheduler? Maybe yes and maybe no. There are other solutions. In modern microservices-oriented world the very first that comes to mind is moving heavy work to separate JVM, container, host or wherever else.</p></div><footer></footer></article></section></div><footer class=footer><section class=container>©
-2020 -
+2011 -
 2023
 Ivan Sopov
 ·

@@ -120,7 +120,7 @@ package main import ( &#34;fmt&#34; &#34;testing&#34; ) type structID struct { f
 </span></span><span style=display:flex><span>BenchmarkName/mapstruct_exact_map-10    892	  1327966 ns/op	 814922 B/op	10003 allocs/op
 </span></span><span style=display:flex><span>PASS
 </span></span></code></pre></div><p>It seems to me that there is no clear advantage of on way of writing things over the other. It is clear that specifying the exact size of the map upfront is beneficial, but that is the case with any single map also. Regarding the topic in question - one way we receive slightly better performance and less memory allocations, the other way we receive less memory allocated. What is more important depends on the context.</p></div><footer></footer></article></section></div><footer class=footer><section class=container>©
-2020 -
+2011 -
 2023
 Ivan Sopov
 ·
