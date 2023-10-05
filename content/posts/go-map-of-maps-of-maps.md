@@ -1,10 +1,10 @@
 +++ 
-draft = true
-date = 2023-04-13T13:30:49+03:00
+date = 2023-10-05T13:30:49+03:00
 title = "Go map of maps of maps vs complex keys"
 tags = ["Golang"]
 +++ 
 
+In other languages I've seen single map performing better than a map of maps or even map of maps of maps. I wanted to test which way is better in Go. So I wrote this test:
 
 ```go
 package main
@@ -110,7 +110,20 @@ func test(add func(first, second, third int, value string)) {
 	}
 }
 ```
-And the results:
+
+Running it I got these results.
+
 ```
-TODO
+BenchmarkName
+BenchmarkName/mapmapmap_def_maps
+BenchmarkName/mapmapmap_def_maps-10     634	  1787864 ns/op	 812567 B/op	13332 allocs/op
+BenchmarkName/mapstruct_def_map
+BenchmarkName/mapstruct_def_map-10      686	  1723303 ns/op	1606390 B/op	10125 allocs/op
+BenchmarkName/mapmapmap_exact_maps
+BenchmarkName/mapmapmap_exact_maps-10   750	  1614700 ns/op	 584977 B/op	12225 allocs/op
+BenchmarkName/mapstruct_exact_map
+BenchmarkName/mapstruct_exact_map-10    892	  1327966 ns/op	 814922 B/op	10003 allocs/op
+PASS
 ```
+
+It seems to me that there is no clear advantage of on way of writing things over the other. It is clear that specifying the exact size of the map upfront is beneficial, but that is the case with any single map also. Regarding the topic in question - one way we receive slightly better performance and less memory allocations, the other way we receive less memory allocated. What is more important depends on the context. 
