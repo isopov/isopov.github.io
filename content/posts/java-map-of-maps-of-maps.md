@@ -88,27 +88,27 @@ public class MapMapMapBenchmark {
 Running it I got these results.
 
 ```
-Benchmark                                              Mode  Cnt        Score     Error   Units
-MapMapMapBenchmark.mapMapMap                           avgt   15      379.447 ±  15.983   us/op
-MapMapMapBenchmark.mapMapMap:·gc.alloc.rate            avgt   15     2461.668 ± 105.561  MB/sec
-MapMapMapBenchmark.mapMapMap:·gc.alloc.rate.norm       avgt   15   978128.156 ±   0.007    B/op
-MapMapMapBenchmark.mapMapMap:·gc.count                 avgt   15      124.000            counts
-MapMapMapBenchmark.mapMapMap:·gc.time                  avgt   15       79.000                ms
-MapMapMapBenchmark.mapMapMapExact                      avgt   15      292.492 ±  30.147   us/op
-MapMapMapBenchmark.mapMapMapExact:·gc.alloc.rate       avgt   15     4263.455 ± 413.234  MB/sec
-MapMapMapBenchmark.mapMapMapExact:·gc.alloc.rate.norm  avgt   15  1297112.120 ±   0.012    B/op
-MapMapMapBenchmark.mapMapMapExact:·gc.count            avgt   15      202.000            counts
-MapMapMapBenchmark.mapMapMapExact:·gc.time             avgt   15      146.000                ms
-MapMapMapBenchmark.singleMap                           avgt   15      162.902 ±   0.913   us/op
-MapMapMapBenchmark.singleMap:·gc.alloc.rate            avgt   15     6856.225 ±  38.460  MB/sec
-MapMapMapBenchmark.singleMap:·gc.alloc.rate.norm       avgt   15  1171248.067 ±   0.002    B/op
-MapMapMapBenchmark.singleMap:·gc.count                 avgt   15      222.000            counts
-MapMapMapBenchmark.singleMap:·gc.time                  avgt   15      151.000                ms
-MapMapMapBenchmark.singleMapExact                      avgt   15      129.910 ±   1.519   us/op
-MapMapMapBenchmark.singleMapExact:·gc.alloc.rate       avgt   15     8116.308 ±  92.953  MB/sec
-MapMapMapBenchmark.singleMapExact:·gc.alloc.rate.norm  avgt   15  1105616.054 ±   0.002    B/op
-MapMapMapBenchmark.singleMapExact:·gc.count            avgt   15      260.000            counts
-MapMapMapBenchmark.singleMapExact:·gc.time             avgt   15      190.000                ms
+Benchmark                                     Mode  Cnt        Score     Error   Units
+Benchmark.mapMapMap                           avgt   15      379.447 ±  15.983   us/op
+Benchmark.mapMapMap:·gc.alloc.rate            avgt   15     2461.668 ± 105.561  MB/sec
+Benchmark.mapMapMap:·gc.alloc.rate.norm       avgt   15   978128.156 ±   0.007    B/op
+Benchmark.mapMapMap:·gc.count                 avgt   15      124.000            counts
+Benchmark.mapMapMap:·gc.time                  avgt   15       79.000                ms
+Benchmark.mapMapMapExact                      avgt   15      292.492 ±  30.147   us/op
+Benchmark.mapMapMapExact:·gc.alloc.rate       avgt   15     4263.455 ± 413.234  MB/sec
+Benchmark.mapMapMapExact:·gc.alloc.rate.norm  avgt   15  1297112.120 ±   0.012    B/op
+Benchmark.mapMapMapExact:·gc.count            avgt   15      202.000            counts
+Benchmark.mapMapMapExact:·gc.time             avgt   15      146.000                ms
+Benchmark.singleMap                           avgt   15      162.902 ±   0.913   us/op
+Benchmark.singleMap:·gc.alloc.rate            avgt   15     6856.225 ±  38.460  MB/sec
+Benchmark.singleMap:·gc.alloc.rate.norm       avgt   15  1171248.067 ±   0.002    B/op
+Benchmark.singleMap:·gc.count                 avgt   15      222.000            counts
+Benchmark.singleMap:·gc.time                  avgt   15      151.000                ms
+Benchmark.singleMapExact                      avgt   15      129.910 ±   1.519   us/op
+Benchmark.singleMapExact:·gc.alloc.rate       avgt   15     8116.308 ±  92.953  MB/sec
+Benchmark.singleMapExact:·gc.alloc.rate.norm  avgt   15  1105616.054 ±   0.002    B/op
+Benchmark.singleMapExact:·gc.count            avgt   15      260.000            counts
+Benchmark.singleMapExact:·gc.time             avgt   15      190.000                ms
 ```
 
 The map of maps of maps case without upfront map creation is obviously the slowest one. However its allocations per operations are the smallest too. But the performance difference is so huge, that it is pretty obvious that single map with record keys should be preferred. This may be retested with non-primitive record fields, however is some CPU-bound tasks the advantage of on way of dealing with maps over the other is obvious.
