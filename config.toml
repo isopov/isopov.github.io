@@ -97,3 +97,8 @@ pygmentscodefencesguesssyntax = true
             name = "Blog"
             weight = 2
             url = "posts/"
+
+            [[languages.en.menu.main]]
+            name = "Tags"
+            weight = 3
+            url = "tags/"
