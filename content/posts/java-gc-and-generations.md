@@ -4,7 +4,7 @@ title = "Java garbarge collectors, generational hypothesis and throughput"
 tags = ["Java"]
 +++
 
-In recent years Java and Hotspot JMV in particular received several new garbage collectors. Most recently generational
+In recent years Java and Hotspot JVM in particular received several new garbage collectors. Most recently generational
 Z collector [was introduced](https://inside.java/2023/11/28/gen-zgc-explainer/).
 
 It is common knowledge that it is possible to achieve almost any results in artificial benchmarks, but nonetheless it may
