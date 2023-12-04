@@ -1,6 +1,6 @@
 +++
 date = 2023-11-30T15:10:49+03:00
-title = "Java garbarge collectors, generational hypothesis and throughput"
+title = "Java GC, generational hypothesis and throughput"
 tags = ["Java"]
 +++
 
