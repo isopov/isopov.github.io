@@ -6,7 +6,7 @@ theme = ["hugo-chart", "hugo-coder"]
 languagecode = "en"
 defaultcontentlanguage = "en"
 
-paginate = 20
+paginate = 100
 
 pygmentsstyle = "b2"
 pygmentscodefences = true
