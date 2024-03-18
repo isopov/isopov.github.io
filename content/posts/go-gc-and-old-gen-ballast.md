@@ -146,7 +146,7 @@ PASS
 ```
 A bit interesting are the results with >100MB of old objects in a heap with 100MB soft limit. No errors are produced (unlike Java), but essentially garbage collections happens all the time trying to reclaim the RAM. It affects performance. With less than 100MB (or 80MB to be more specific) of old objects in the heap GC overhead decreases.
 
-As a last experiment let's try to occupy heap not with 5 heavy old slices, but with 50 thousand.
+As a last experiment let's try to occupy heap not with 1-15 heavy old slices, but with 1-15 thousand.
 ```go
 			olds = make([][]byte, bench*1024)
 			for i := 0; i < bench*1024; i++ {
