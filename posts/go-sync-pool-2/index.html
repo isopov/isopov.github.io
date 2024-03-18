@@ -109,7 +109,7 @@ It is easy to trap into old information regarding sync.Pool and gc interrogation
 </span></span></code></pre></div><p>Even one garbage collection hugely affects allocations of this test. Two garbage collections affect it even more, while any additionals have no effect. Suppose you have some near zero-allocating application that uses sync.Pools heavily in various places. Any change leading to memory allocation big enough for garbage collection happening may lead to
 cascading failure of protection from allocations and hiding the original cause of the allocation spike.</p></div><footer></footer></article></section></div><footer class=footer><section class=container>©
 2011 -
-2023
+2024
 Ivan Sopov
 ·
 Powered by <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> & <a href=https://github.com/luizdepra/hugo-coder/ target=_blank rel=noopener>Coder</a>.</section></footer></main><script src=/js/coder.min.6ae284be93d2d19dad1f02b0039508d9aab3180a12a06dcc71b0b0ef7825a317.js integrity="sha256-auKEvpPS0Z2tHwKwA5UI2aqzGAoSoG3McbCw73gloxc="></script></body></html>

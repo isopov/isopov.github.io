@@ -1,0 +1,169 @@
+<!doctype html><html lang=en><head><title>Go GC, generational hypothesis and throughput · isopov
+</title><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=color-scheme content="light dark"><meta name=author content="Ivan Sopov"><meta name=description content="In the previous post I investigated effect of old generation objects on Java garbage collectors. Here I want to run similar test for Go language. It is a bit less interesting since there is only one option, but nevertheless some useful insights can be taken out. Like how much RAM to give for GC breathing. Or maybe is it worth giving some extra GBs of RAM to squeeze out last tiny percents of performance."><meta name=keywords content="blog,developer,personal"><meta name=twitter:card content="summary"><meta name=twitter:title content="Go GC, generational hypothesis and throughput"><meta name=twitter:description content="In the previous post I investigated effect of old generation objects on Java garbage collectors. Here I want to run similar test for Go language. It is a bit less interesting since there is only one option, but nevertheless some useful insights can be taken out. Like how much RAM to give for GC breathing. Or maybe is it worth giving some extra GBs of RAM to squeeze out last tiny percents of performance."><meta property="og:title" content="Go GC, generational hypothesis and throughput"><meta property="og:description" content="In the previous post I investigated effect of old generation objects on Java garbage collectors. Here I want to run similar test for Go language. It is a bit less interesting since there is only one option, but nevertheless some useful insights can be taken out. Like how much RAM to give for GC breathing. Or maybe is it worth giving some extra GBs of RAM to squeeze out last tiny percents of performance."><meta property="og:type" content="article"><meta property="og:url" content="https://isopov.github.io/posts/go-gc-and-old-gen-ballast/"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-03-18T10:10:42+03:00"><meta property="article:modified_time" content="2024-03-18T10:10:42+03:00"><link rel=canonical href=https://isopov.github.io/posts/go-gc-and-old-gen-ballast/><link rel=preload href="/fonts/forkawesome-webfont.woff2?v=1.2.0" as=font type=font/woff2 crossorigin><link rel=stylesheet href=/css/coder.min.135e22c97ff685fe983fc60048e309ced8f00d8d38f536aa67dba8a13a03dfa4.css integrity="sha256-E14iyX/2hf6YP8YASOMJztjwDY049TaqZ9uooToD36Q=" crossorigin=anonymous media=screen><link rel=stylesheet href=/css/coder-dark.min.a00e6364bacbc8266ad1cc81230774a1397198f8cfb7bcba29b7d6fcb54ce57f.css integrity="sha256-oA5jZLrLyCZq0cyBIwd0oTlxmPjPt7y6KbfW/LVM5X8=" crossorigin=anonymous media=screen><link rel=icon type=image/svg+xml href=/images/favicon.svg sizes=any><link rel=icon type=image/png href=/images/favicon-32x32.png sizes=32x32><link rel=icon type=image/png href=/images/favicon-16x16.png sizes=16x16><link rel=apple-touch-icon href=/images/apple-touch-icon.png><link rel=apple-touch-icon sizes=180x180 href=/images/apple-touch-icon.png><link rel=manifest href=/site.webmanifest><link rel=mask-icon href=/images/safari-pinned-tab.svg color=#5bbad5></head><body class="preload-transitions colorscheme-auto"><div class=float-container><a id=dark-mode-toggle class=colorscheme-toggle><i class="fa fa-adjust fa-fw" aria-hidden=true></i></a></div><main class=wrapper><nav class=navigation><section class=container><a class=navigation-title href=/>isopov
+</a><input type=checkbox id=menu-toggle>
+<label class="menu-button float-right" for=menu-toggle><i class="fa fa-bars fa-fw" aria-hidden=true></i></label><ul class=navigation-list><li class=navigation-item><a class=navigation-link href=/about/>About</a></li><li class=navigation-item><a class=navigation-link href=/posts/>Blog</a></li><li class=navigation-item><a class=navigation-link href=/tags/>Tags</a></li></ul></section></nav><div class=content><section class="container post"><article><header><div class=post-title><h1 class=title><a class=title-link href=https://isopov.github.io/posts/go-gc-and-old-gen-ballast/>Go GC, generational hypothesis and throughput</a></h1></div><div class=post-meta><div class=date><span class=posted-on><i class="fa fa-calendar" aria-hidden=true></i>
+<time datetime=2024-03-18T10:10:42+03:00>March 18, 2024
+</time></span><span class=reading-time><i class="fa fa-clock-o" aria-hidden=true></i>
+5-minute read</span></div><div class=tags><i class="fa fa-tag" aria-hidden=true></i>
+<span class=tag><a href=/tags/golang/>Golang</a></span></div></div></header><div class=post-content><p>In the <a href=https://isopov.github.io/posts/java-gc-and-generations/>previous post</a> I investigated effect of old generation objects on Java garbage collectors. Here I want to run similar test for Go language. It is a bit less interesting since there is only one option, but nevertheless some useful insights can be taken out. Like how much RAM to give for GC breathing. Or maybe is it worth giving some extra GBs of RAM to squeeze out last tiny percents of performance. And when adding more RAM starts making worse (in theory it is easy to achieve this especially if you measure your success in terms of latency and not throughput). However, any complex test is better done with more realistic workload. Here I want to check just the simple assumptions and dependencies.</p><p>First, I wrote this simple test to check how half the occupied heap affects garbage collection and overall performance.
+Half heap ballast</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#fff;font-weight:700>package</span> main
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#fff;font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#0ff;font-weight:700>&#34;runtime/debug&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#0ff;font-weight:700>&#34;testing&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#0ff;font-weight:700>&#34;golang.org/x/exp/rand&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#fff;font-weight:700>var</span> BBlackhole []<span style=color:#fff;font-weight:700>byte</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#fff;font-weight:700>func</span> BenchmarkBallast(b *testing.B) {
+</span></span><span style=display:flex><span>	debug.SetMemoryLimit(<span style=color:#ff0;font-weight:700>100</span> * <span style=color:#ff0;font-weight:700>1024</span> * <span style=color:#ff0;font-weight:700>1024</span>) <span style=color:#007f7f>//100 MB
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>
+</span></span><span style=display:flex><span>	<span style=color:#007f7f>//run everything 10 times to catch possible warmup effects
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>	<span style=color:#fff;font-weight:700>for</span> bench := <span style=color:#ff0;font-weight:700>0</span>; bench &lt; <span style=color:#ff0;font-weight:700>10</span>; bench++ {
+</span></span><span style=display:flex><span>		b.Run(<span style=color:#0ff;font-weight:700>&#34;NoBallast&#34;</span>, <span style=color:#fff;font-weight:700>func</span>(b *testing.B) {
+</span></span><span style=display:flex><span>			<span style=color:#fff;font-weight:700>for</span> i := <span style=color:#ff0;font-weight:700>0</span>; i &lt; b.N; i++ {
+</span></span><span style=display:flex><span>				BBlackhole = <span style=color:#fff;font-weight:700>make</span>([]<span style=color:#fff;font-weight:700>byte</span>, <span style=color:#ff0;font-weight:700>10</span>*<span style=color:#ff0;font-weight:700>1024</span>) <span style=color:#007f7f>//10KB
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>			}
+</span></span><span style=display:flex><span>		})
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		<span style=color:#007f7f>//make ~50MB ballast in heap
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>		olds := <span style=color:#fff;font-weight:700>make</span>([][]<span style=color:#fff;font-weight:700>byte</span>, <span style=color:#ff0;font-weight:700>5</span>)
+</span></span><span style=display:flex><span>		<span style=color:#fff;font-weight:700>for</span> i := <span style=color:#ff0;font-weight:700>0</span>; i &lt; <span style=color:#ff0;font-weight:700>5</span>; i++ {
+</span></span><span style=display:flex><span>			olds[i] = <span style=color:#fff;font-weight:700>make</span>([]<span style=color:#fff;font-weight:700>byte</span>, <span style=color:#ff0;font-weight:700>10</span>*<span style=color:#ff0;font-weight:700>1024</span>*<span style=color:#ff0;font-weight:700>1024</span>) <span style=color:#007f7f>//10 MB
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>		}
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		b.Run(<span style=color:#0ff;font-weight:700>&#34;Ballast&#34;</span>, <span style=color:#fff;font-weight:700>func</span>(b *testing.B) {
+</span></span><span style=display:flex><span>			<span style=color:#fff;font-weight:700>for</span> i := <span style=color:#ff0;font-weight:700>0</span>; i &lt; b.N; i++ {
+</span></span><span style=display:flex><span>				BBlackhole = <span style=color:#fff;font-weight:700>make</span>([]<span style=color:#fff;font-weight:700>byte</span>, <span style=color:#ff0;font-weight:700>10</span>*<span style=color:#ff0;font-weight:700>1024</span>) <span style=color:#007f7f>//10KB
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>			}
+</span></span><span style=display:flex><span>		})
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>		<span style=color:#007f7f>//&#34;use&#34; ballast so that it would no be cleared earlier
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>		BBlackhole = olds[rand.Intn(<span style=color:#ff0;font-weight:700>5</span>)]
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The results (all the repetitions omitted for brevity - they are almost identical to each other) are quite disappointing.</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>BenchmarkBallast/NoBallast
+</span></span><span style=display:flex><span>BenchmarkBallast/NoBallast-10      	 1667966	       742.1 ns/op
+</span></span><span style=display:flex><span>BenchmarkBallast/Ballast
+</span></span><span style=display:flex><span>BenchmarkBallast/Ballast-10        	 3101397	       346.6 ns/op
+</span></span></code></pre></div><p>With no old gen ballast performance it almost twice worse, than with it. But that is easily explained by the defaults of Go GC heuristics. Besides new and shiny option GOMEMLIMIT there is old, but still used GOGC option that by default trigger garbage collection after 200% heap is occupied compared to the state after the previous collection. With no old object in the heap that means GC triggering almost non-stop one right after another. Disabling this behaviour with this line (alternatively, just like with memory limit it can be done with env variable)</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>	<span style=color:#007f7f>//to turn off automatic collections on nearly empty heap
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>	debug.SetGCPercent(-<span style=color:#ff0;font-weight:700>1</span>)
+</span></span></code></pre></div><p>We will receive the following results:</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>BenchmarkBallast/NoBallast
+</span></span><span style=display:flex><span>BenchmarkBallast/NoBallast-10      	 3771654	       306.6 ns/op
+</span></span><span style=display:flex><span>BenchmarkBallast/Ballast
+</span></span><span style=display:flex><span>BenchmarkBallast/Ballast-10        	 3588614	       348.4 ns/op
+</span></span></code></pre></div><p>As expected allocation-bounded benchmark gets throughput performance boost from more free heap and less frequent garbage collections.</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span><span style=color:#fff;font-weight:700>package</span> main
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#fff;font-weight:700>import</span> (
+</span></span><span style=display:flex><span>	<span style=color:#0ff;font-weight:700>&#34;runtime/debug&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#0ff;font-weight:700>&#34;strconv&#34;</span>
+</span></span><span style=display:flex><span>	<span style=color:#0ff;font-weight:700>&#34;testing&#34;</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span>	<span style=color:#0ff;font-weight:700>&#34;golang.org/x/exp/rand&#34;</span>
+</span></span><span style=display:flex><span>)
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#fff;font-weight:700>var</span> Blackhole []<span style=color:#fff;font-weight:700>byte</span>
+</span></span><span style=display:flex><span>
+</span></span><span style=display:flex><span><span style=color:#fff;font-weight:700>func</span> BenchmarkAllocaWithOlds(b *testing.B) {
+</span></span><span style=display:flex><span>	debug.SetMemoryLimit(<span style=color:#ff0;font-weight:700>100</span> * <span style=color:#ff0;font-weight:700>1024</span> * <span style=color:#ff0;font-weight:700>1024</span>) <span style=color:#007f7f>//100 MB
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>	<span style=color:#007f7f>//to turn off automatic collections on nearly empty heap
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>	debug.SetGCPercent(-<span style=color:#ff0;font-weight:700>1</span>)
+</span></span><span style=display:flex><span>	<span style=color:#fff;font-weight:700>for</span> bench := <span style=color:#ff0;font-weight:700>15</span>; bench &gt;= <span style=color:#ff0;font-weight:700>0</span>; bench-- {
+</span></span><span style=display:flex><span>		<span style=color:#fff;font-weight:700>var</span> olds [][]<span style=color:#fff;font-weight:700>byte</span>
+</span></span><span style=display:flex><span>		<span style=color:#fff;font-weight:700>if</span> bench != <span style=color:#ff0;font-weight:700>0</span> {
+</span></span><span style=display:flex><span>			olds = <span style=color:#fff;font-weight:700>make</span>([][]<span style=color:#fff;font-weight:700>byte</span>, bench)
+</span></span><span style=display:flex><span>			<span style=color:#fff;font-weight:700>for</span> i := <span style=color:#ff0;font-weight:700>0</span>; i &lt; bench; i++ {
+</span></span><span style=display:flex><span>				olds[i] = <span style=color:#fff;font-weight:700>make</span>([]<span style=color:#fff;font-weight:700>byte</span>, <span style=color:#ff0;font-weight:700>10</span>*<span style=color:#ff0;font-weight:700>1024</span>*<span style=color:#ff0;font-weight:700>1024</span>) <span style=color:#007f7f>//10 MB
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>			}
+</span></span><span style=display:flex><span>		}
+</span></span><span style=display:flex><span>		b.Run(strconv.Itoa(bench), <span style=color:#fff;font-weight:700>func</span>(b *testing.B) {
+</span></span><span style=display:flex><span>			<span style=color:#fff;font-weight:700>for</span> i := <span style=color:#ff0;font-weight:700>0</span>; i &lt; b.N; i++ {
+</span></span><span style=display:flex><span>				Blackhole = <span style=color:#fff;font-weight:700>make</span>([]<span style=color:#fff;font-weight:700>byte</span>, <span style=color:#ff0;font-weight:700>10</span>*<span style=color:#ff0;font-weight:700>1024</span>) <span style=color:#007f7f>//10 KB
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>			}
+</span></span><span style=display:flex><span>			<span style=color:#fff;font-weight:700>if</span> bench != <span style=color:#ff0;font-weight:700>0</span> {
+</span></span><span style=display:flex><span>				Blackhole = olds[rand.Intn(bench)]
+</span></span><span style=display:flex><span>			}
+</span></span><span style=display:flex><span>		})
+</span></span><span style=display:flex><span>		olds = <span style=color:#fff;font-weight:700>nil</span>
+</span></span><span style=display:flex><span>	}
+</span></span><span style=display:flex><span>}
+</span></span></code></pre></div><p>The results are:</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>BenchmarkAllocaWithOlds
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/15
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/15-10 	  611986	      2169 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/14
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/14-10 	 1249198	      1013 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/13
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/13-10 	 1164472	      1093 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/12
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/12-10 	 1000000	      1095 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/11
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/11-10 	 1000000	      1131 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/10
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/10-10 	 1116847	      1071 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/9
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/9-10  	 1073702	      1185 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/8
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/8-10  	 1000000	      1080 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/7
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/7-10  	 2256046	       505.5 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/6
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/6-10  	 3219080	       384.3 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/5
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/5-10  	 3429478	       346.5 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/4
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/4-10  	 3476504	       335.5 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/3
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/3-10  	 3768894	       334.3 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/2
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/2-10  	 3570604	       338.5 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/1
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/1-10  	 3689316	       320.5 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/0
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/0-10  	 3913862	       311.2 ns/op
+</span></span><span style=display:flex><span>PASS
+</span></span></code></pre></div><p>A bit interesting are the results with >100MB of old objects in a heap with 100MB soft limit. No errors are produced (unlike Java), but essentially garbage collections happens all the time trying to reclaim the RAM. It affects performance. With less than 100MB (or 80MB to be more specific) of old objects in the heap GC overhead decreases.</p><p>As a last experiment let&rsquo;s try to occupy heap not with 5 heavy old slices, but with 50 thousand.</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-go data-lang=go><span style=display:flex><span>			olds = <span style=color:#fff;font-weight:700>make</span>([][]<span style=color:#fff;font-weight:700>byte</span>, bench*<span style=color:#ff0;font-weight:700>1024</span>)
+</span></span><span style=display:flex><span>			<span style=color:#fff;font-weight:700>for</span> i := <span style=color:#ff0;font-weight:700>0</span>; i &lt; bench*<span style=color:#ff0;font-weight:700>1024</span>; i++ {
+</span></span><span style=display:flex><span>				olds[i] = <span style=color:#fff;font-weight:700>make</span>([]<span style=color:#fff;font-weight:700>byte</span>, <span style=color:#ff0;font-weight:700>10</span>*<span style=color:#ff0;font-weight:700>1024</span>) <span style=color:#007f7f>//10 KB
+</span></span></span><span style=display:flex><span><span style=color:#007f7f></span>			}
+</span></span></code></pre></div><p>This is much more realistic (unless we are talking about usual before GOMEMLIMIT introduction memory ballast) and affects performace more.</p><div class=highlight><pre tabindex=0 style=color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4><code class=language-fallback data-lang=fallback><span style=display:flex><span>BenchmarkAllocaWithOlds
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/15
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/15-10 	  196195	      6209 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/14
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/14-10 	  260227	      4549 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/13
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/13-10 	  319176	      3852 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/12
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/12-10 	  233354	      5015 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/11
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/11-10 	  258919	      6355 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/10
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/10-10 	  200463	      5774 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/9
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/9-10  	  206736	      5483 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/8
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/8-10  	 1000000	      1112 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/7
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/7-10  	 1908793	       641.3 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/6
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/6-10  	 2411346	       494.2 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/5
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/5-10  	 2926117	       442.5 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/4
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/4-10  	 3119446	       423.4 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/3
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/3-10  	 3158749	       354.8 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/2
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/2-10  	 3334771	       347.9 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/1
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/1-10  	 3824101	       318.6 ns/op
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/0
+</span></span><span style=display:flex><span>BenchmarkAllocaWithOlds/0-10  	 3775035	       320.7 ns/op
+</span></span><span style=display:flex><span>PASS
+</span></span></code></pre></div><p>Some conclusions can be deducted from these simplistic benchmarks. However, only basic ones and I suggest to alter your configs or code of production applications only after load testing and profiling them under real load.</p></div><footer></footer></article></section></div><footer class=footer><section class=container>©
+2011 -
+2024
+Ivan Sopov
+·
+Powered by <a href=https://gohugo.io/ target=_blank rel=noopener>Hugo</a> & <a href=https://github.com/luizdepra/hugo-coder/ target=_blank rel=noopener>Coder</a>.</section></footer></main><script src=/js/coder.min.6ae284be93d2d19dad1f02b0039508d9aab3180a12a06dcc71b0b0ef7825a317.js integrity="sha256-auKEvpPS0Z2tHwKwA5UI2aqzGAoSoG3McbCw73gloxc="></script></body></html>
