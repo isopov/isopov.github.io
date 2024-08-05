@@ -67,20 +67,24 @@ pygmentscodefencesguesssyntax = true
 
 [[params.social]]
     name = "Github"
-    icon = "fa fa-github"
+    icon = "fa-brands fa-github"
     weight = 1
     url = "https://github.com/isopov/"
 [[params.social]]
     name = "X"
-    icon = "fa fa-x-twitter"
+    icon = "fa-brands fa-x-twitter"
     weight = 2
     url = "https://x.com/i_sopov/"
 [[params.social]]
     name = "LinkedIn"
-    icon = "fa fa-linkedin"
+    icon = "fa-brands fa-linkedin"
     weight = 3
     url = "https://www.linkedin.com/in/ivan-sopov-74623b28/"
-
+[[params.social]]
+    name = "Mastodon"
+    icon = "fa-brands fa-mastodon"
+    weight = 4
+    url = "https://mastodon.social/@isopov"
 
 [languages]
     [languages.en]
