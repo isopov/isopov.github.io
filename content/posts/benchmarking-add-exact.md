@@ -2,6 +2,7 @@
 title: "Benchmarking an interview question"
 date: 2015-08-15T23:22:39+03:00
 draft: false
+tags: ["Java"]
 ---
 *Author benchmarks a super-simple method with a dumb implementation from his recent job interview. Results of this benchmark contradict with assumptions. The process of benchmarking produces some public benefit.*
 

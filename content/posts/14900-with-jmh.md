@@ -2,6 +2,7 @@
 title: "Benchmarking 14900K CPU"
 date: 2024-11-25T22:42:39+03:00
 draft: false
+tags: ["Java"]
 ---
 
 So, I got bored with waiting for tests of my laptop and built myself a new desktop for the first time in 10 years. I've built it around 14900K CPU and no separate GPU at all. For the OS I use Ubuntu 24.04. And I wanted to look closer to the differences between cores in this CPU. It has 8 performance cores and 16 efficient cores. So I wrote this benchmark to test them.
