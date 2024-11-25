@@ -1,9 +1,433 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Golang on isopov</title><link>https://isopov.github.io/tags/golang/</link><description>Recent content in Golang on isopov</description><generator>Hugo</generator><language>en</language><lastBuildDate>Mon, 05 Aug 2024 11:55:49 +0300</lastBuildDate><atom:link href="https://isopov.github.io/tags/golang/index.xml" rel="self" type="application/rss+xml"/><item><title>Go concurrent sort of the same slice</title><link>https://isopov.github.io/posts/go-concurrent-sort/</link><pubDate>Mon, 05 Aug 2024 11:55:49 +0300</pubDate><guid>https://isopov.github.io/posts/go-concurrent-sort/</guid><description>Recently I&amp;rsquo;ve stumbled upon a broken cache in my application written in Go. Some slices of structs got from database were cached in memory. In the hindsight the problem is obvious - every consumer of this cache sorted these slices independently. And since slices were cached in some cases they were sorting one and the same slice concurrently. Someone may suggest that sorting should be done in the database with sort by, but even in the simplest case where it can be done on this level simply adding SORT BY clause it may be not desirable.</description></item><item><title>Go GC, generational hypothesis and throughput</title><link>https://isopov.github.io/posts/go-gc-and-old-gen-ballast/</link><pubDate>Mon, 18 Mar 2024 10:10:42 +0300</pubDate><guid>https://isopov.github.io/posts/go-gc-and-old-gen-ballast/</guid><description>In the previous post I investigated effect of old generation objects on Java garbage collectors. Here I want to run similar test for Go language. It is a bit less interesting since there is only one option, but nevertheless some useful insights can be taken out. Like how much RAM to give for GC breathing. Or maybe is it worth giving some extra GBs of RAM to squeeze out last tiny percents of performance.</description></item><item><title>Go map of maps of maps vs complex keys</title><link>https://isopov.github.io/posts/go-map-of-maps-of-maps/</link><pubDate>Thu, 05 Oct 2023 13:30:49 +0300</pubDate><guid>https://isopov.github.io/posts/go-map-of-maps-of-maps/</guid><description>In other languages I&amp;rsquo;ve seen single map performing better than a map of maps or even map of maps of maps. I wanted to test which way is better in Go. So I wrote this test:
-package main import ( &amp;#34;fmt&amp;#34; &amp;#34;testing&amp;#34; ) type structID struct { first int second int third int } var Blackholemapmapmap map[int]map[int]map[int]string var Blackholemapstruct map[structID]string func BenchmarkName(b *testing.B) { b.Run(&amp;#34;mapmapmap def maps&amp;#34;, func(b *testing.B) { b.</description></item><item><title>Go channel(s) contention</title><link>https://isopov.github.io/posts/go-channel-contention/</link><pubDate>Mon, 27 Mar 2023 20:22:39 +0300</pubDate><guid>https://isopov.github.io/posts/go-channel-contention/</guid><description>In the previous post I&amp;rsquo;ve tried to measure overhead from highly contended access to sync.Pool on go. There was some measurable overhead, but it was mild. However in order for another goroutine to recieve some work to be done or/and to publish work results you may need go channel also. In this post I&amp;rsquo;ll try to measure the overhead of contended access to go channel.
-So I&amp;rsquo;ve written the following code</description></item><item><title>Growing goroutine stacks</title><link>https://isopov.github.io/posts/goroutine-stack-grow/</link><pubDate>Fri, 24 Mar 2023 20:22:39 +0300</pubDate><guid>https://isopov.github.io/posts/goroutine-stack-grow/</guid><description>Go allows to run very lightweight goroutines and throw them away (for garbage collector) after they are no longer needed. You can execute any code inside them and this caode can allocate as much as needed. Both on stack and on heap. If goroutine stack is too small it grows. This grow is not free. Suppose you have a widely used function that needs to allocate a bit of memory on stack.</description></item><item><title>Go sync.Pool contention</title><link>https://isopov.github.io/posts/sync-pool-contention/</link><pubDate>Fri, 24 Mar 2023 16:22:39 +0300</pubDate><guid>https://isopov.github.io/posts/sync-pool-contention/</guid><description>Recently my colleague suggested that contention on a single sync.Pool in Go may hit performance. I decided to reproduce this performance hit in a benchmark. This is what I was capable of writing.
-import ( &amp;#34;runtime&amp;#34; &amp;#34;strconv&amp;#34; &amp;#34;sync&amp;#34; &amp;#34;sync/atomic&amp;#34; &amp;#34;testing&amp;#34; ) func workWithPool(pool *sync.Pool) { const size = 1000 values := [size]int{} for i := 0; i &amp;lt; size; i++ { values[i] = pool.Get().(int) } for i := 0; i &amp;lt; size; i++ { pool.</description></item><item><title>Go sync.Pool and gc</title><link>https://isopov.github.io/posts/go-sync-pool-2/</link><pubDate>Tue, 01 Mar 2022 13:10:49 +0300</pubDate><guid>https://isopov.github.io/posts/go-sync-pool-2/</guid><description>I&amp;rsquo;ve posted my brief experiments with sync.Pool in go. However, reading about it guides that it may be hard to use tool. And sometimes it can degrade for third-party reasons. It is easy to trap into old information regarding sync.Pool and gc interrogation. Since go 1.13 sync.Pool is not cleared completely on every gc. However, it is still affected by gc. Suppose the following code:
-type Obj []int func (o *Obj) Fill() { for i := 0; i &amp;lt; cap(*o); i++ { *o = append(*o, i) } } func (o Obj) Count() int { result := 0 for i := 0; i &amp;lt; len(o); i++ { result += o[i] } return result } func NewObj() *Obj { o := make(Obj, 0, 100*1024) return &amp;amp;o } var objPool = &amp;amp;sync.</description></item><item><title>Go sync.Pool</title><link>https://isopov.github.io/posts/go-sync-pool/</link><pubDate>Fri, 25 Feb 2022 13:30:49 +0300</pubDate><guid>https://isopov.github.io/posts/go-sync-pool/</guid><description>Recently I&amp;rsquo;ve seen sync.Pools in various Go libraries. Sometimes I wondered wether it is worth using at all. So I wrote some tests. Here are they:
-package main import ( &amp;#34;crypto/sha256&amp;#34; &amp;#34;hash&amp;#34; &amp;#34;strings&amp;#34; &amp;#34;sync&amp;#34; &amp;#34;testing&amp;#34; ) var shaPool = &amp;amp;sync.Pool{ New: func() interface{} { return sha256.New() }, } var HashTrap hash.Hash var Source = []byte(strings.ToLower(&amp;#34;asdfavzxcvsdfqawesfdz&amp;#34;)) var ResultTrap []byte func Benchmark(b *testing.B) { b.Run(&amp;#34;Pool&amp;#34;, func(b *testing.B) { b.ReportAllocs() for i := 0; i &amp;lt; b.</description></item><item><title>Go scheduler fairness</title><link>https://isopov.github.io/posts/go-scheduler-fairness/</link><pubDate>Fri, 02 Apr 2021 18:30:49 +0300</pubDate><guid>https://isopov.github.io/posts/go-scheduler-fairness/</guid><description>Recently in Jaeger I stumbled at an interesting trace - the work was done for 1 second, than 20 there was a gap for 20 seconds and after that work continued. My best guess currently is that goroutine slept for 20 seconds. To reproduce it I wrote the following:
-package main import ( &amp;#34;context&amp;#34; &amp;#34;fmt&amp;#34; &amp;#34;runtime&amp;#34; &amp;#34;sync/atomic&amp;#34; &amp;#34;time&amp;#34; &amp;#34;github.com/couchbaselabs/ghistogram&amp;#34; ) func main() { runtime.GOMAXPROCS(1) ctx, cancel := context.WithCancel(context.Background()) workers := 300 done := make([]chan bool, workers) for i := 0; i &amp;lt; workers; i++ { done[i] = make(chan bool) } times := ghistogram.</description></item><item><title>Moving work to another goroutine</title><link>https://isopov.github.io/posts/moving-work-to-goroutine/</link><pubDate>Tue, 30 Mar 2021 12:25:42 +0300</pubDate><guid>https://isopov.github.io/posts/moving-work-to-goroutine/</guid><description>Concurency in Go is super easy. Still to write it inside my very large work project I first needed to get my hands with it on really small and simple example. So I wrote one and it seems that this blog is a perfect place to store it.
-package main import ( &amp;#34;time&amp;#34; ) func main() { worker := make(chan int, 10) done := make(chan bool) go func() { for data := range worker { time.</description></item><item><title>Using map[]struct{} or map[]bool in Golang</title><link>https://isopov.github.io/posts/map-bool-or-struct/</link><pubDate>Sun, 01 Nov 2020 13:35:52 +0300</pubDate><guid>https://isopov.github.io/posts/map-bool-or-struct/</guid><description>In Golang you do not have set data structure. So you can use map instead. When you do not need values there are two options widely used - using empty struct{} or bool as value. struct{} should be more performant, while bool is more convinient. I decided to check the first promise myslef. Golang have benchamrks support in its standard library. SO I wrote this one:
-package mapstruct import ( &amp;#34;math/rand&amp;#34; &amp;#34;testing&amp;#34; ) func input() []int { slice := make([]int, 10_000) for i := 0; i &amp;lt; 10_000; i++ { slice[i] = rand.</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Golang on isopov</title><link>https://isopov.github.io/tags/golang/</link><description>Recent content in Golang on isopov</description><generator>Hugo</generator><language>en</language><lastBuildDate>Mon, 05 Aug 2024 11:55:49 +0300</lastBuildDate><atom:link href="https://isopov.github.io/tags/golang/index.xml" rel="self" type="application/rss+xml"/><item><title>Go concurrent sort of the same slice</title><link>https://isopov.github.io/posts/go-concurrent-sort/</link><pubDate>Mon, 05 Aug 2024 11:55:49 +0300</pubDate><guid>https://isopov.github.io/posts/go-concurrent-sort/</guid><description>&lt;p>Recently I&amp;rsquo;ve stumbled upon a broken cache in my application written in Go. Some slices of structs got from database were
+cached in memory. In the hindsight the problem is obvious - every consumer of this cache sorted these slices independently.
+And since slices were cached in some cases they were sorting one and the same slice concurrently. Someone may suggest that
+sorting should be done in the database with sort by, but even in the simplest case where it can be done on this level simply
+adding &lt;code>SORT BY&lt;/code> clause it may be not desirable. Usually application layer is scaled much easier than the storage layer.
+Only some newest databases introduce their own scalable computational nodes separate from the storage nodes. Traditionally
+you may want to make your queries as lightweight as possible and move some CPU-bound postprocessing to application layer.
+Also, you don&amp;rsquo;t want to query your database for one and the same information over and over. So caches are introduced to the
+application layer. And here we go with DAO -&amp;gt; Cache -&amp;gt; Provider/Manager.&lt;/p></description></item><item><title>Go GC, generational hypothesis and throughput</title><link>https://isopov.github.io/posts/go-gc-and-old-gen-ballast/</link><pubDate>Mon, 18 Mar 2024 10:10:42 +0300</pubDate><guid>https://isopov.github.io/posts/go-gc-and-old-gen-ballast/</guid><description>&lt;p>In the &lt;a href="https://isopov.github.io/posts/java-gc-and-generations/" >previous post&lt;/a> I investigated effect of old generation objects on Java garbage collectors. Here I want to run similar test for Go language. It is a bit less interesting since there is only one option, but nevertheless some useful insights can be taken out. Like how much RAM to give for GC breathing. Or maybe is it worth giving some extra GBs of RAM to squeeze out last tiny percents of performance. And when adding more RAM starts making worse (in theory it is easy to achieve this especially if you measure your success in terms of latency and not throughput). However, any complex test is better done with more realistic workload. Here I want to check just the simple assumptions and dependencies.&lt;/p></description></item><item><title>Go map of maps of maps vs complex keys</title><link>https://isopov.github.io/posts/go-map-of-maps-of-maps/</link><pubDate>Thu, 05 Oct 2023 13:30:49 +0300</pubDate><guid>https://isopov.github.io/posts/go-map-of-maps-of-maps/</guid><description>&lt;p>In other languages I&amp;rsquo;ve seen single map performing better than a map of maps or even map of maps of maps. I wanted to test which way is better in Go. So I wrote this test:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">package&lt;/span> main
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">import&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;testing&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">type&lt;/span> structID &lt;span style="color:#fff;font-weight:bold">struct&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	first &lt;span style="color:#fff;font-weight:bold">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	second &lt;span style="color:#fff;font-weight:bold">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	third &lt;span style="color:#fff;font-weight:bold">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">var&lt;/span> Blackholemapmapmap &lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">string&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">var&lt;/span> Blackholemapstruct &lt;span style="color:#fff;font-weight:bold">map&lt;/span>[structID]&lt;span style="color:#fff;font-weight:bold">string&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> BenchmarkName(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	b.Run(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;mapmapmap def maps&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		b.ReportAllocs()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; b.N; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			m := &lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">string&lt;/span>{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			test(&lt;span style="color:#fff;font-weight:bold">func&lt;/span>(first, second, third &lt;span style="color:#fff;font-weight:bold">int&lt;/span>, value &lt;span style="color:#fff;font-weight:bold">string&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				seconds := m[first]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				&lt;span style="color:#fff;font-weight:bold">if&lt;/span> seconds == &lt;span style="color:#fff;font-weight:bold">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					seconds = &lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">string&lt;/span>{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					m[first] = seconds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				thirds := seconds[second]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				&lt;span style="color:#fff;font-weight:bold">if&lt;/span> thirds == &lt;span style="color:#fff;font-weight:bold">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					thirds = &lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">string&lt;/span>{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					seconds[second] = thirds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				thirds[third] = value
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			Blackholemapmapmap = m
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	b.Run(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;mapstruct def map&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		b.ReportAllocs()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; b.N; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			m := &lt;span style="color:#fff;font-weight:bold">map&lt;/span>[structID]&lt;span style="color:#fff;font-weight:bold">string&lt;/span>{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			test(&lt;span style="color:#fff;font-weight:bold">func&lt;/span>(first, second, third &lt;span style="color:#fff;font-weight:bold">int&lt;/span>, value &lt;span style="color:#fff;font-weight:bold">string&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				m[structID{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					first: first,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					second: second,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					third: third,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				}] = value
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			Blackholemapstruct = m
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	b.Run(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;mapmapmap exact maps&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		b.ReportAllocs()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; b.N; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			m := &lt;span style="color:#fff;font-weight:bold">make&lt;/span>(&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">string&lt;/span>, firstsCount)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			test(&lt;span style="color:#fff;font-weight:bold">func&lt;/span>(first, second, third &lt;span style="color:#fff;font-weight:bold">int&lt;/span>, value &lt;span style="color:#fff;font-weight:bold">string&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				seconds := m[first]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				&lt;span style="color:#fff;font-weight:bold">if&lt;/span> seconds == &lt;span style="color:#fff;font-weight:bold">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					seconds = &lt;span style="color:#fff;font-weight:bold">make&lt;/span>(&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">string&lt;/span>, secondsCount)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					m[first] = seconds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				thirds := seconds[second]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				&lt;span style="color:#fff;font-weight:bold">if&lt;/span> thirds == &lt;span style="color:#fff;font-weight:bold">nil&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					thirds = &lt;span style="color:#fff;font-weight:bold">make&lt;/span>(&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">string&lt;/span>, thirdsCount)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					seconds[second] = thirds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				thirds[third] = value
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			Blackholemapmapmap = m
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	b.Run(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;mapstruct exact map&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		b.ReportAllocs()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; b.N; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			m := &lt;span style="color:#fff;font-weight:bold">make&lt;/span>(&lt;span style="color:#fff;font-weight:bold">map&lt;/span>[structID]&lt;span style="color:#fff;font-weight:bold">string&lt;/span>, firstsCount*secondsCount*thirdsCount)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			test(&lt;span style="color:#fff;font-weight:bold">func&lt;/span>(first, second, third &lt;span style="color:#fff;font-weight:bold">int&lt;/span>, value &lt;span style="color:#fff;font-weight:bold">string&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				m[structID{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					first: first,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					second: second,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					third: third,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				}] = value
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			Blackholemapstruct = m
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">const&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	firstsCount = &lt;span style="color:#ff0;font-weight:bold">100&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	secondsCount = &lt;span style="color:#ff0;font-weight:bold">10&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	thirdsCount = &lt;span style="color:#ff0;font-weight:bold">10&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> test(add &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(first, second, third &lt;span style="color:#fff;font-weight:bold">int&lt;/span>, value &lt;span style="color:#fff;font-weight:bold">string&lt;/span>)) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> first := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; first &amp;lt; firstsCount; first++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">for&lt;/span> second := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; second &amp;lt; secondsCount; second++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			&lt;span style="color:#fff;font-weight:bold">for&lt;/span> third := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; third &amp;lt; thirdsCount; third++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				add(first, second, third, fmt.Sprintf(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;%d-%d-%d&amp;#34;&lt;/span>, first, second, third))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>Running it I got these results.&lt;/p></description></item><item><title>Go channel(s) contention</title><link>https://isopov.github.io/posts/go-channel-contention/</link><pubDate>Mon, 27 Mar 2023 20:22:39 +0300</pubDate><guid>https://isopov.github.io/posts/go-channel-contention/</guid><description>&lt;p>In the &lt;a href="https://isopov.github.io/posts/sync-pool-contention/" >previous post&lt;/a> I&amp;rsquo;ve tried to measure overhead from highly contended access to sync.Pool on go. There was some measurable overhead, but it was mild. However in order for another goroutine to recieve some work to be done or/and to publish work results you may need go channel also. In this post I&amp;rsquo;ll try to measure the overhead of contended access to go channel.&lt;/p>
+&lt;p>So I&amp;rsquo;ve written the following code&lt;/p></description></item><item><title>Growing goroutine stacks</title><link>https://isopov.github.io/posts/goroutine-stack-grow/</link><pubDate>Fri, 24 Mar 2023 20:22:39 +0300</pubDate><guid>https://isopov.github.io/posts/goroutine-stack-grow/</guid><description>&lt;p>Go allows to run very lightweight goroutines and throw them away (for garbage collector) after they are no longer needed. You can execute any code inside them and this caode can allocate as much as needed. Both on stack and on heap. If goroutine stack is too small it grows. This grow is not free. Suppose you have a widely used function that needs to allocate a bit of memory on stack. Depending on whether there is enough of memory on stack or not it will take different amount of time, since in some cases it will include time to grow the stack. It happens that a really common function time.Now() is allocating. So this effect can be demoed with this function. Consider the following program.&lt;/p></description></item><item><title>Go sync.Pool contention</title><link>https://isopov.github.io/posts/sync-pool-contention/</link><pubDate>Fri, 24 Mar 2023 16:22:39 +0300</pubDate><guid>https://isopov.github.io/posts/sync-pool-contention/</guid><description>&lt;p>Recently my colleague suggested that contention on a single sync.Pool in Go may hit performance. I decided to reproduce this performance hit in a benchmark. This is what I was capable of writing.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">import&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;runtime&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;strconv&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;sync&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;sync/atomic&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;testing&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> workWithPool(pool *sync.Pool) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">const&lt;/span> size = &lt;span style="color:#ff0;font-weight:bold">1000&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	values := [size]&lt;span style="color:#fff;font-weight:bold">int&lt;/span>{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; size; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		values[i] = pool.Get().(&lt;span style="color:#fff;font-weight:bold">int&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; size; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		pool.Put(values[i])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> Benchmark_Pool(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> _, parallelism := &lt;span style="color:#fff;font-weight:bold">range&lt;/span> []&lt;span style="color:#fff;font-weight:bold">int&lt;/span>{&lt;span style="color:#ff0;font-weight:bold">1&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">2&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">3&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">4&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">5&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">10&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">20&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">50&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">100&lt;/span>} {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		b.Run(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;Parallelism &amp;#34;&lt;/span>+strconv.Itoa(parallelism), &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			b.Run(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;one pool&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				b.SetParallelism(parallelism)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				pool := &amp;amp;sync.Pool{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					New: &lt;span style="color:#fff;font-weight:bold">func&lt;/span>() any {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						&lt;span style="color:#fff;font-weight:bold">return&lt;/span> &lt;span style="color:#ff0;font-weight:bold">42&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				b.RunParallel(&lt;span style="color:#fff;font-weight:bold">func&lt;/span>(pb *testing.PB) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					&lt;span style="color:#fff;font-weight:bold">for&lt;/span> pb.Next() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						workWithPool(pool)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			b.Run(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;many pools&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				b.SetParallelism(parallelism)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				numPools := runtime.GOMAXPROCS(&lt;span style="color:#ff0;font-weight:bold">0&lt;/span>) * parallelism
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				pools := &lt;span style="color:#fff;font-weight:bold">make&lt;/span>([]*sync.Pool, numPools)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; numPools; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					pools[i] = &amp;amp;sync.Pool{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						New: &lt;span style="color:#fff;font-weight:bold">func&lt;/span>() any {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>							&lt;span style="color:#fff;font-weight:bold">return&lt;/span> &lt;span style="color:#ff0;font-weight:bold">42&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				procs := &lt;span style="color:#fff;font-weight:bold">uint32&lt;/span>(&lt;span style="color:#ff0;font-weight:bold">0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				b.RunParallel(&lt;span style="color:#fff;font-weight:bold">func&lt;/span>(pb *testing.PB) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					poolidx := atomic.LoadUint32(&amp;amp;procs)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					&lt;span style="color:#fff;font-weight:bold">for&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						&lt;span style="color:#fff;font-weight:bold">if&lt;/span> atomic.CompareAndSwapUint32(&amp;amp;procs, poolidx, poolidx+&lt;span style="color:#ff0;font-weight:bold">1&lt;/span>) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>							&lt;span style="color:#fff;font-weight:bold">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						poolidx = atomic.LoadUint32(&amp;amp;procs)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					&lt;span style="color:#fff;font-weight:bold">for&lt;/span> pb.Next() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						workWithPool(pools[poolidx])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>It seems that I need to comment a bit on the parallelism parameter. It stands for number of goroutines per each thread, while number of threads by default is equal to number of CPU cores. In my case I have 10 cores and thus 10 threads.
+Here are the results with some omissions and reformatting to simplify reading.&lt;/p></description></item><item><title>Go sync.Pool and gc</title><link>https://isopov.github.io/posts/go-sync-pool-2/</link><pubDate>Tue, 01 Mar 2022 13:10:49 +0300</pubDate><guid>https://isopov.github.io/posts/go-sync-pool-2/</guid><description>&lt;p>I&amp;rsquo;ve posted my brief experiments with sync.Pool in go. However, reading about it guides that it may be hard to use tool. And sometimes it can degrade for third-party reasons.
+It is easy to trap into old information regarding sync.Pool and gc interrogation. &lt;a href="https://github.com/golang/go/commit/2dcbf8b3691e72d1b04e9376488cef3b6f93b286" class="external-link" target="_blank" rel="noopener">Since go 1.13 sync.Pool is not cleared completely on every gc&lt;/a>. However, it is still affected by gc. Suppose the following code:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">type&lt;/span> Obj []&lt;span style="color:#fff;font-weight:bold">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> (o *Obj) Fill() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; &lt;span style="color:#fff;font-weight:bold">cap&lt;/span>(*o); i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		*o = &lt;span style="color:#fff;font-weight:bold">append&lt;/span>(*o, i)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> (o Obj) Count() &lt;span style="color:#fff;font-weight:bold">int&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	result := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; &lt;span style="color:#fff;font-weight:bold">len&lt;/span>(o); i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		result += o[i]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">return&lt;/span> result
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> NewObj() *Obj {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	o := &lt;span style="color:#fff;font-weight:bold">make&lt;/span>(Obj, &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">100&lt;/span>*&lt;span style="color:#ff0;font-weight:bold">1024&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">return&lt;/span> &amp;amp;o
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">var&lt;/span> objPool = &amp;amp;sync.Pool{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	New: &lt;span style="color:#fff;font-weight:bold">func&lt;/span>() &lt;span style="color:#fff;font-weight:bold">interface&lt;/span>{} {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">return&lt;/span> NewObj()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">var&lt;/span> ResultTrap &lt;span style="color:#fff;font-weight:bold">int&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> WorkWithPool() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	o := objPool.Get().(*Obj)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	o.Fill()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	ResultTrap = o.Count()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	released := (*o)[:&lt;span style="color:#ff0;font-weight:bold">0&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	objPool.Put(&amp;amp;released)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And let&amp;rsquo;s use it this way:&lt;/p></description></item><item><title>Go sync.Pool</title><link>https://isopov.github.io/posts/go-sync-pool/</link><pubDate>Fri, 25 Feb 2022 13:30:49 +0300</pubDate><guid>https://isopov.github.io/posts/go-sync-pool/</guid><description>&lt;p>Recently I&amp;rsquo;ve seen sync.Pools in various Go libraries. Sometimes I wondered wether it is worth using at all. So I wrote some tests. Here are they:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">package&lt;/span> main
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">import&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;crypto/sha256&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;hash&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;strings&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;sync&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;testing&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">var&lt;/span> shaPool = &amp;amp;sync.Pool{
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	New: &lt;span style="color:#fff;font-weight:bold">func&lt;/span>() &lt;span style="color:#fff;font-weight:bold">interface&lt;/span>{} {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">return&lt;/span> sha256.New()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">var&lt;/span> HashTrap hash.Hash
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">var&lt;/span> Source = []&lt;span style="color:#fff;font-weight:bold">byte&lt;/span>(strings.ToLower(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;asdfavzxcvsdfqawesfdz&amp;#34;&lt;/span>))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">var&lt;/span> ResultTrap []&lt;span style="color:#fff;font-weight:bold">byte&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> Benchmark(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	b.Run(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;Pool&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		b.ReportAllocs()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; b.N; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			HashTrap = shaPool.Get().(hash.Hash)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			ResultTrap = HashTrap.Sum(Source)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			HashTrap.Reset()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			shaPool.Put(HashTrap)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	b.Run(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;NoPool&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		b.ReportAllocs()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; b.N; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			HashTrap = sha256.New()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			ResultTrap = HashTrap.Sum(Source)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	b.Run(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;Local&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		b.ReportAllocs()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; b.N; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			h := sha256.New()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			ResultTrap = h.Sum(Source)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	})
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And the results:&lt;/p></description></item><item><title>Go scheduler fairness</title><link>https://isopov.github.io/posts/go-scheduler-fairness/</link><pubDate>Fri, 02 Apr 2021 18:30:49 +0300</pubDate><guid>https://isopov.github.io/posts/go-scheduler-fairness/</guid><description>&lt;p>Recently in Jaeger I stumbled at an interesting trace - the work was done for 1 second, than 20 there was a gap for 20 seconds and after that work continued. My best guess currently is that goroutine slept for 20 seconds. To reproduce it I wrote the following:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">package&lt;/span> main
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">import&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;context&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;fmt&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;runtime&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;sync/atomic&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;time&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;github.com/couchbaselabs/ghistogram&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> main() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	runtime.GOMAXPROCS(&lt;span style="color:#ff0;font-weight:bold">1&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	ctx, cancel := context.WithCancel(context.Background())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	workers := &lt;span style="color:#ff0;font-weight:bold">300&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	done := &lt;span style="color:#fff;font-weight:bold">make&lt;/span>([]&lt;span style="color:#fff;font-weight:bold">chan&lt;/span> &lt;span style="color:#fff;font-weight:bold">bool&lt;/span>, workers)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; workers; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		done[i] = &lt;span style="color:#fff;font-weight:bold">make&lt;/span>(&lt;span style="color:#fff;font-weight:bold">chan&lt;/span> &lt;span style="color:#fff;font-weight:bold">bool&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	times := ghistogram.NewHistogram(&lt;span style="color:#ff0;font-weight:bold">10&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">5000&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	minCount := &lt;span style="color:#fff;font-weight:bold">int64&lt;/span>(&lt;span style="color:#ff0;font-weight:bold">0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	maxCount := &lt;span style="color:#fff;font-weight:bold">int64&lt;/span>(&lt;span style="color:#ff0;font-weight:bold">0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; workers; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		doneChannel := done[i]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		count := &lt;span style="color:#fff;font-weight:bold">int64&lt;/span>(&lt;span style="color:#ff0;font-weight:bold">0&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">go&lt;/span> &lt;span style="color:#fff;font-weight:bold">func&lt;/span>(ctx context.Context) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			prev := time.Now()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			&lt;span style="color:#fff;font-weight:bold">for&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				&lt;span style="color:#fff;font-weight:bold">select&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				&lt;span style="color:#fff;font-weight:bold">case&lt;/span> &amp;lt;-ctx.Done():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					&lt;span style="color:#fff;font-weight:bold">if&lt;/span> count == &lt;span style="color:#ff0;font-weight:bold">0&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						&lt;span style="color:#fff;font-weight:bold">println&lt;/span>(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;Boom!&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					&lt;span style="color:#fff;font-weight:bold">for&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						savedMinCount := minCount
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						&lt;span style="color:#fff;font-weight:bold">if&lt;/span> count &amp;lt; savedMinCount || savedMinCount == &lt;span style="color:#ff0;font-weight:bold">0&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>							&lt;span style="color:#fff;font-weight:bold">if&lt;/span> atomic.CompareAndSwapInt64(&amp;amp;minCount, savedMinCount, count) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>								&lt;span style="color:#fff;font-weight:bold">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>							}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						} &lt;span style="color:#fff;font-weight:bold">else&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>							&lt;span style="color:#fff;font-weight:bold">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					&lt;span style="color:#fff;font-weight:bold">for&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						savedMaxCount := maxCount
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						&lt;span style="color:#fff;font-weight:bold">if&lt;/span> count &amp;gt; savedMaxCount {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>							&lt;span style="color:#fff;font-weight:bold">if&lt;/span> atomic.CompareAndSwapInt64(&amp;amp;maxCount, savedMaxCount, count) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>								&lt;span style="color:#fff;font-weight:bold">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>							}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						} &lt;span style="color:#fff;font-weight:bold">else&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>							&lt;span style="color:#fff;font-weight:bold">break&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>						}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					&lt;span style="color:#fff;font-weight:bold">close&lt;/span>(doneChannel)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					&lt;span style="color:#fff;font-weight:bold">return&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				&lt;span style="color:#fff;font-weight:bold">default&lt;/span>:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					next := time.Now()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					dif := next.Sub(prev)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					times.Add(&lt;span style="color:#fff;font-weight:bold">uint64&lt;/span>(dif), &lt;span style="color:#ff0;font-weight:bold">1&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					prev = next
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>					count++
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>				}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		}(ctx)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	time.Sleep(&lt;span style="color:#ff0;font-weight:bold">30&lt;/span> * time.Second)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	cancel()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; workers; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&amp;lt;-done[i]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">println&lt;/span>(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;Times&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i, r := &lt;span style="color:#fff;font-weight:bold">range&lt;/span> times.Ranges {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		fmt.Printf(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;%s - %d\n&amp;#34;&lt;/span>, time.Duration(r), times.Counts[i])
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	fmt.Printf(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;min - %s\n&amp;#34;&lt;/span>, time.Duration(times.MinDataPoint))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	fmt.Printf(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;max - %s\n&amp;#34;&lt;/span>, time.Duration(times.MaxDataPoint))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">println&lt;/span>(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;Counts&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	fmt.Printf(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;min - %d\n&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">int&lt;/span>(minCount))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	fmt.Printf(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;max - %d\n&amp;#34;&lt;/span>, &lt;span style="color:#fff;font-weight:bold">int&lt;/span>(maxCount))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>In this code I start 300 goroutines in 1 thread and try to iterate without any sleeps inside each goroutine. The only thing that is done in those loops - recording time of the iteration and storing it in histogram.
+Output is:&lt;/p></description></item><item><title>Moving work to another goroutine</title><link>https://isopov.github.io/posts/moving-work-to-goroutine/</link><pubDate>Tue, 30 Mar 2021 12:25:42 +0300</pubDate><guid>https://isopov.github.io/posts/moving-work-to-goroutine/</guid><description>&lt;p>Concurency in Go is super easy. Still to write it inside my very large work project I first needed to get my hands with it on really small and simple example. So I wrote one and it seems that this blog is a perfect place to store it.&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">package&lt;/span> main
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">import&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;time&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> main() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	worker := &lt;span style="color:#fff;font-weight:bold">make&lt;/span>(&lt;span style="color:#fff;font-weight:bold">chan&lt;/span> &lt;span style="color:#fff;font-weight:bold">int&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">10&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	done := &lt;span style="color:#fff;font-weight:bold">make&lt;/span>(&lt;span style="color:#fff;font-weight:bold">chan&lt;/span> &lt;span style="color:#fff;font-weight:bold">bool&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">go&lt;/span> &lt;span style="color:#fff;font-weight:bold">func&lt;/span>() {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">for&lt;/span> data := &lt;span style="color:#fff;font-weight:bold">range&lt;/span> worker {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			time.Sleep(&lt;span style="color:#ff0;font-weight:bold">50&lt;/span> * time.Millisecond)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>			&lt;span style="color:#fff;font-weight:bold">println&lt;/span>(data)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		&lt;span style="color:#fff;font-weight:bold">close&lt;/span>(done)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">1&lt;/span>; i &amp;lt;= &lt;span style="color:#ff0;font-weight:bold">20&lt;/span>; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		worker &amp;lt;- i
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">close&lt;/span>(worker)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">println&lt;/span>(&lt;span style="color:#0ff;font-weight:bold">&amp;#34;done settings tasks&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&amp;lt;-done
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>The only thing that is too simplistic here is that we have only one worker goroutine. So let&amp;rsquo;s make some more - we need a separate bool channel to track finish.&lt;/p></description></item><item><title>Using map[]struct{} or map[]bool in Golang</title><link>https://isopov.github.io/posts/map-bool-or-struct/</link><pubDate>Sun, 01 Nov 2020 13:35:52 +0300</pubDate><guid>https://isopov.github.io/posts/map-bool-or-struct/</guid><description>&lt;p>In Golang you do not have set data structure. So you can use map instead. When you do not need values there are two options widely used - using empty &lt;code>struct{}&lt;/code> or &lt;code>bool&lt;/code> as value. &lt;code>struct{}&lt;/code> should be more performant, while &lt;code>bool&lt;/code> is more convinient. I decided to check the first promise myslef. Golang have benchamrks support in its standard library. SO I wrote this one:&lt;/p>
+&lt;div class="highlight">&lt;pre tabindex="0" style="color:#e5e5e5;background-color:#000;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-go" data-lang="go">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">package&lt;/span> mapstruct
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">import&lt;/span> (
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;math/rand&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#0ff;font-weight:bold">&amp;#34;testing&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> input() []&lt;span style="color:#fff;font-weight:bold">int&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	slice := &lt;span style="color:#fff;font-weight:bold">make&lt;/span>([]&lt;span style="color:#fff;font-weight:bold">int&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">10_000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; &lt;span style="color:#ff0;font-weight:bold">10_000&lt;/span>; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		slice[i] = rand.Intn(&lt;span style="color:#ff0;font-weight:bold">1_000&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">return&lt;/span> slice
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> uniqueBool(input []&lt;span style="color:#fff;font-weight:bold">int&lt;/span>) []&lt;span style="color:#fff;font-weight:bold">int&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	vals := &lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">bool&lt;/span>{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> _, v := &lt;span style="color:#fff;font-weight:bold">range&lt;/span> input {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		vals[v] = &lt;span style="color:#fff;font-weight:bold">true&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	result := &lt;span style="color:#fff;font-weight:bold">make&lt;/span>([]&lt;span style="color:#fff;font-weight:bold">int&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>, &lt;span style="color:#fff;font-weight:bold">len&lt;/span>(vals))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> v := &lt;span style="color:#fff;font-weight:bold">range&lt;/span> vals {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		result = &lt;span style="color:#fff;font-weight:bold">append&lt;/span>(result, v)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">return&lt;/span> result
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> uniqueStruct(input []&lt;span style="color:#fff;font-weight:bold">int&lt;/span>) []&lt;span style="color:#fff;font-weight:bold">int&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	vals := &lt;span style="color:#fff;font-weight:bold">map&lt;/span>[&lt;span style="color:#fff;font-weight:bold">int&lt;/span>]&lt;span style="color:#fff;font-weight:bold">struct&lt;/span>{}{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> _, v := &lt;span style="color:#fff;font-weight:bold">range&lt;/span> input {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		vals[v] = &lt;span style="color:#fff;font-weight:bold">struct&lt;/span>{}{}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	result := &lt;span style="color:#fff;font-weight:bold">make&lt;/span>([]&lt;span style="color:#fff;font-weight:bold">int&lt;/span>, &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>, &lt;span style="color:#fff;font-weight:bold">len&lt;/span>(vals))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> v := &lt;span style="color:#fff;font-weight:bold">range&lt;/span> vals {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		result = &lt;span style="color:#fff;font-weight:bold">append&lt;/span>(result, v)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">return&lt;/span> result
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> BenchmarkBool(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; b.N; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		uniqueBool(input())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#fff;font-weight:bold">func&lt;/span> BenchmarkStruct(b *testing.B) {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	&lt;span style="color:#fff;font-weight:bold">for&lt;/span> i := &lt;span style="color:#ff0;font-weight:bold">0&lt;/span>; i &amp;lt; b.N; i++ {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>		uniqueStruct(input())
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>	}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}
+&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;p>And the result are quite variadic (Should developers write their own tooling to run benchamrks multiple times and compute averages, variances, etc?) Here are two results from different runs:&lt;/p></description></item></channel></rss>
