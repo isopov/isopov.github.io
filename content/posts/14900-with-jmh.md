@@ -100,3 +100,91 @@ Next shift I expected between 16 and 17 threads, since I have 8 performance core
 This performance drop on each thread continued after number of threads exceeded the number of CPU threads. 
 
 From what I can see it seems that there is no need to profit to limit concurrency on this CPU to the number of performance threads at least in some cases demonstrated here.
+
+### Update: this seems too close to the original post and too small for the separate one.
+
+Since the total amount of work is different previous benchmark results are actually hard to compare. So I've written another one:
+
+```java
+@State(Scope.Thread)
+@BenchmarkMode(Mode.AverageTime)
+@Fork(3)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+public class ThreadsBenchmark {
+    @Param({"1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16",
+            "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32",
+            "33", "34", "35", "36",
+    })
+    public String threads;
+
+    private static final int RESULTS = 128;
+
+    @Benchmark
+    public List<byte[]> bench() throws ExecutionException, InterruptedException {
+        try (var executor = Executors.newFixedThreadPool(Integer.parseInt(threads))) {
+            var futures = new ArrayList<Future<byte[]>>(RESULTS);
+            for (int i = 0; i < RESULTS; i++) {
+                futures.add(executor.submit(() -> {
+                    var random = RandomGenerator.getDefault();
+                    var bytes = new byte[1024];
+                    for (int j = 0; j < 1024; j++) {
+                        random.nextBytes(bytes);
+                    }
+                    return bytes;
+                }));
+            }
+            var result = new ArrayList<byte[]>(RESULTS);
+            for (int i = 0; i < RESULTS; i++) {
+                result.add(futures.get(i).get());
+            }
+            return result;
+        }
+    }
+}
+```
+
+This produces the following result:
+
+```
+Benchmark                (threads)  Mode  Cnt   Score   Error  Units
+ThreadsBenchmark.bench           1  avgt   15  57.861 ± 1.329  ms/op
+ThreadsBenchmark.bench           2  avgt   15  31.279 ± 0.527  ms/op
+ThreadsBenchmark.bench           3  avgt   15  26.376 ± 0.926  ms/op
+ThreadsBenchmark.bench           4  avgt   15  20.307 ± 0.404  ms/op
+ThreadsBenchmark.bench           5  avgt   15  16.930 ± 0.237  ms/op
+ThreadsBenchmark.bench           6  avgt   15  15.026 ± 0.358  ms/op
+ThreadsBenchmark.bench           7  avgt   15  12.878 ± 0.171  ms/op
+ThreadsBenchmark.bench           8  avgt   15  11.145 ± 0.204  ms/op
+ThreadsBenchmark.bench           9  avgt   15  10.054 ± 0.181  ms/op
+ThreadsBenchmark.bench          10  avgt   15   8.818 ± 0.073  ms/op
+ThreadsBenchmark.bench          11  avgt   15   7.942 ± 0.090  ms/op
+ThreadsBenchmark.bench          12  avgt   15   7.389 ± 0.173  ms/op
+ThreadsBenchmark.bench          13  avgt   15   7.010 ± 0.186  ms/op
+ThreadsBenchmark.bench          14  avgt   15   6.285 ± 0.173  ms/op
+ThreadsBenchmark.bench          15  avgt   15   5.920 ± 0.071  ms/op
+ThreadsBenchmark.bench          16  avgt   15   5.459 ± 0.049  ms/op
+ThreadsBenchmark.bench          17  avgt   15   5.347 ± 0.049  ms/op
+ThreadsBenchmark.bench          18  avgt   15   5.262 ± 0.043  ms/op
+ThreadsBenchmark.bench          19  avgt   15   5.225 ± 0.208  ms/op
+ThreadsBenchmark.bench          20  avgt   15   4.773 ± 0.043  ms/op
+ThreadsBenchmark.bench          21  avgt   15   4.744 ± 0.022  ms/op
+ThreadsBenchmark.bench          22  avgt   15   4.635 ± 0.080  ms/op
+ThreadsBenchmark.bench          23  avgt   15   4.643 ± 0.029  ms/op
+ThreadsBenchmark.bench          24  avgt   15   4.610 ± 0.026  ms/op
+ThreadsBenchmark.bench          25  avgt   15   4.641 ± 0.063  ms/op
+ThreadsBenchmark.bench          26  avgt   15   4.597 ± 0.008  ms/op
+ThreadsBenchmark.bench          27  avgt   15   4.595 ± 0.019  ms/op
+ThreadsBenchmark.bench          28  avgt   15   4.622 ± 0.038  ms/op
+ThreadsBenchmark.bench          29  avgt   15   4.524 ± 0.009  ms/op
+ThreadsBenchmark.bench          30  avgt   15   4.518 ± 0.048  ms/op
+ThreadsBenchmark.bench          31  avgt   15   4.472 ± 0.061  ms/op
+ThreadsBenchmark.bench          32  avgt   15   4.455 ± 0.009  ms/op
+ThreadsBenchmark.bench          33  avgt   15   4.432 ± 0.096  ms/op
+ThreadsBenchmark.bench          34  avgt   15   4.495 ± 0.009  ms/op
+ThreadsBenchmark.bench          35  avgt   15   4.516 ± 0.018  ms/op
+ThreadsBenchmark.bench          36  avgt   15   4.528 ± 0.023  ms/op
+```
+
+A can draw several conclusions from these results. Really using more than 2x performance cores produce little value. However, nevertheless there is some value in using more cores including efficient ones. Also, there is no penalty at all. So usual technique of using a thread pool of size equal or greater to quantity of logical cores on the CPU should work just fine.
